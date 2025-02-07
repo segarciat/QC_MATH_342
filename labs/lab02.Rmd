@@ -1,6 +1,6 @@
 ---
 title: "Lab 2 MATH 342W"
-author: "Your Name Here"
+author: "Sergio E. Garcia Tapia"
 output: pdf_document
 date: "11:59PM February 8"
 ---
@@ -10,46 +10,76 @@ date: "11:59PM February 8"
 * In class we considered a variable `x_3` which measured "criminality". We imagined L = 4 levels "none", "infraction", "misdimeanor" and "felony". Create a variable `x_3` here with 100 random elements (equally probable). Create it as a nominal (i.e. unordered) factor.
 
 ```{r}
-#TO-DO
+rm(list = ls())
+criminal_levels = c("none", "infraction", "misdemeanor", "felony")
+x_3_char = sample(criminal_levels, size = 100, replace = TRUE)
+# In R, a factor is (by default) a nominal categorical variable.
+x_3 = factor(x_3_char, levels = criminal_levels)
+x_3
+rm(x_3)
 ```
 
 * Use `x_3` to create `x_3_bin`, a binary feature where 0 is no crime and 1 is any crime.
 
 ```{r}
-#TO-DO
+x_3_bin = as.numeric(x_3_char != "none")
+x_3_bin
+rm(x_3_bin)
 ```
 
 * Use `x_3` to create `x_3_ord`, an ordered factor variable. Ensure the proper ordinal ordering.
 
 ```{r}
-#TO-DO
+?factor
+# An ordered factor variable is an ordered categorical variable.
+x_3_ord = factor(x_3_char, levels = criminal_levels, ordered = TRUE)
+x_3_ord
+rm(x_3_ord)
 ```
 
 * Convert this variable into three binary variables without any information loss and put them into a data matrix.
 
 ```{r}
-#TO-DO
+# cbind: Take a sequence of vectors or matrices and combine by rows or columns.
+?cbind
+
+# Create 100 x 3 matrix from the 100 elements, where each row is a 3-tuple: (is_infraction, is_misdemeanor, is_felony)
+X = cbind(
+  is_infraction = as.numeric(x_3_char == "infraction"),
+  is_misdemeanor = as.numeric(x_3_char == "misdemeanor"),
+  is_felony = as.numeric(x_3_char == "felony")
+)
+head(X)
+
+# Verify the output is indeed a 100 by 3 matrix
+# class(X)
+# nrow(X)
+# ncol(X)
 ```
 
 * What should the sum of each row be (in English)? 
 
-#TO-DO
+It will be $0$ if the person's criminal history is "none". Otherwise, the person's criminal history
+falls exactly in one category (since we've made them mutually exclusive), so the sum will be $1$.
 
 Verify that. 
 
 
 ```{r}
-#TO-DO
+X_row_sums = rowSums(X)
+all((X_row_sums == 0) | (X_row_sums == 1))
+rm(X_row_sums)
 ```
 
-* How should the column sum look (in English)? 
+* How should the column sum look (in English)?
 
-#TO-DO
+Approximately 25, because we sampled each level with probability 1/4.
 
 Verify that.
 
 ```{r}
-#TO-DO
+colSums(X)
+rm(criminal_levels, X, x_3_char)
 ```
 
 * Generate a matrix with 100 rows where the first column is realization from a normal with mean 17 and variance 38, the second column is uniform between -10 and 10, the third column is poisson with mean 6, the fourth column in exponential with lambda of 9, the fifth column is binomial with n = 20 and p = 0.12 and the sixth column is a binary variable with exactly 24% 1's dispersed randomly. Name the rows the entries of the `fake_first_names` vector.
@@ -73,52 +103,138 @@ fake_first_names = c(
   "Landon", "David", "Christian", "Andrew", "Brayden", "John", 
   "Lincoln"
 )
+# number of rows
+n = length(fake_first_names)
+# number of columns
+p = 6
 
-#TO-DO
+?rnorm
+?runif
+?rpois
+?rexp
+?rbinom
+# documentation on dimnames attribute: a list of length one is treated as row names; length 2 is row names and then column names
+?matrix
+
+X = matrix(
+  c(
+    rnorm(n, mean = 17, sd = sqrt(38)),
+    runif(n, min = -10, max = 10),
+    rpois(n, lambda = 6),
+    rexp(n, rate = 9),
+    rbinom(n, size = 20, prob = 0.12),
+    sample(c(rep(1, 0.24 * n), rep(0, 0.76 * n)))),
+  byrow = FALSE,
+  nrow = n, ncol = p,
+  dimnames = list(fake_first_names, c("norm", "unif", "pois", "exp", "binom", "binary")))
+head(X)
 ```
 
 * Create a data frame of the same data as above except make the binary variable a factor "DOMESTIC" vs "FOREIGN" for 0 and 1 respectively. Use RStudio's `View` function to ensure this worked as desired.
 
 ```{r}
-#TO-DO
+?factor
+
+levels = c("DOMESTIC", "FOREIGN")
+X = data.frame(
+  norm = rnorm(n, mean = 17, sd = sqrt(38)),
+  unif = runif(n, min = -10, max = 10),
+  pois = rpois(n, lambda = 6),
+  exp = rexp(n, rate = 9),
+  binom = rbinom(n, size = 20, prob = 0.12),
+  binary = factor(
+    sample(c(rep(levels[2], 0.24 * n), rep(levels[1], 0.76 * n))),
+    levels = levels
+  ),
+  row.names = fake_first_names
+  )
+?View
+View(X)
+rm(levels)
+#head(X)
 ```
 
 * Print out a table of the binary variable. Then print out the proportions of "DOMESTIC" vs "FOREIGN".
 
 ```{r}
-#TO-DO
+?table
+table(X[, 6])
 ```
 
 Print out a summary of the whole dataframe.
 
 ```{r}
-#TO-DO
+summary(X)
+rm(X, n, p)
 ```
 
-
-
-
-
 ## Dataframe creation
-
 
 Imagine you are running an experiment with many manipulations. You have 14 levels in the variable "treatment" with levels a, b, c, etc. For each of those manipulations you have 3 submanipulations in a variable named "variation" with levels A, B, C. Then you have "gender" with levels M / F. Then you have "generation" with levels Boomer, GenX, Millenial. Then you will have 6 runs per each of these groups. In each set of 6 you will need to select a name without duplication from the appropriate set of names (from the last question). Create a data frame with columns treatment, variation, gender, generation, name and y that will store all the unique unit information in this experiment. Leave y empty because it will be measured as the experiment is executed. Hint, we've been using the `rep` function using the `times` argument. Look at the `each` argument using `?rep`.
 
 ```{r}
-n = 14 * 3 * 2 * 3 * 10
-#X = data.frame(treatment = rep...,
+treatments = letters[1:14]
+variations = LETTERS[1:3]
+genders = c("M", "F")
+generations = c("Boomer", "GenX", "Millenial")
+runs = 6
+n = length(treatments) * length(genders) * length(variations) * length(generations) * runs
+?rep
+?data.frame
 
-#TO-DO
+#X = data.frame(
+#  treatment = rep(letters[1:14], each = 3*2*3*6),
+#  variation = rep(LETTERS[1:3], each = 2 * 3 * 6, times = 14),
+#  gender = rep(c("M", "F", each = 3 * 6, times = 14 * 3)),
+#  generation = rep(c("Boomer", "GenX", "Millenial"), each = 6, times = 2* 3 * 14),
+#  name = NA
+#)
+
+# Note to self: We are effectively computing a Cartesian product of the vectors defined above.
+
+# The each parameter specifies how many times each value in the first argument of rep is repeated.
+# The times parameter is 1 by default. If one repetition from "each" is [xyz], then when times = 2, we will see [xyzxyz], for example.
+X = data.frame(
+  treatment = rep(treatments, each = length(genders) * length(variations) * length(generations) * runs),
+  variation = rep(variations, times = length(treatments), each = length(genders) * length(generations) * runs),
+  gender = rep(genders, times = length(treatments) * length(variations), each = length(generations) * runs),
+  generation = rep(generations, times = length(treatments) * length(variations) * length(genders), each = runs),
+  name = NA # Populated in the for loop below.
+)
+
+# We do not want repetition in each group of 6, so replace = FALSE.
+create_names = function(A) {
+  names = rep(NA, nrow(A))
+  for (i in seq(from = 1, to = length(names), by = runs)) {
+    names[i:(i+runs-1)] = sample(fake_first_names, replace = FALSE, size = runs)
+  }
+  names
+}
+
+X$name = create_names(X)
+X
 ```
 
 * Now that you've done it with the `rep` function. Try it with the `expand.grid` function which will be much easier.
 
 ```{r}
-#X = data.frame(expand.grid(
-#
-#))
+# Creates a data frame from all combinations of supplied vectors (computes the Cartesian product in our behalf).
+# The first factors varies fastest
+# Columns labeled by named arguments
+?expand.grid
 
-#TO-DO
+X = expand.grid(
+  name = rep(NA, runs),
+  generation = generations,
+  gender = genders,
+  variation = variations,
+  treatment = treatments
+)
+X$name = create_names(X)
+
+# Columns listed in order passed to expand.grid
+X
+rm(list = ls())
 ```
 
 ## Basic Binary Classification Modeling
@@ -126,39 +242,87 @@ n = 14 * 3 * 2 * 3 * 10
 * Load the famous `iris` data frame into the namespace. Provide a summary of the columns using the `skim` function in package `skimr` and write a few descriptive sentences about the distributions using the code below in English.
 
 ```{r}
-#TO-DO
+Xy = iris
+Xy
+pacman::p_load(skimr)
+skim(Xy)
 ```
 
-TO-DO: describe this data
+According to `skim`, there are 50 samples of each of three species: `set`, `ver`, and `vir`. For each sample of a particular
+species, four numeric features were measured: sepal length, sepal width, petal length, and petal width. There is a relatively
+small spread in the values for sepal length (with a mean of 5.84 and standard deviation of 0.828) and a relatively small
+amount of variation in the sepal width values (mean of 3.06 and standard deviation of 0.436). However there is higher
+variability in the petal lengths and widths.
 
 The outcome / label / response is `Species`. This is what we will be trying to predict. However, we only care about binary classification between "setosa" and "versicolor" for the purposes of this exercise. Thus the first order of business is to drop one class. Let's drop the data for the level "virginica" from the data frame.
 
 ```{r}
-#TO-DO
+Xy = Xy[Xy$Species != "virginica", ]
+head(Xy)
+
+# should be 100 since there were 50 of each type
+nrow(Xy)
 ```
 
 Now create a vector `y` that is length the number of remaining rows in the data frame whose entries are 0 if "setosa" and 1 if "versicolor".
 
 ```{r}
-#TO-DO
+y = as.numeric(Xy$Species == "versicolor")
+y
 ```
 
 * Write a function `mode` returning the sample mode of a vector of numeric values. Try not to look in the class notes.
 
 ```{r}
-#TO-DO
+# Given a numeric vector, comptues the mode (the most repeated value).
+mode = function(x) {
+  # 1. table computes counts
+  # 2. sort in decreasing order so largest frequency appears first
+  # 3. Convert to corresponding names (i.e. the values tabulated), retaining the order by frequency
+  # 4. Get the first one (the most frequency value)
+  # 5. Convert back to a number (from string)
+  as.numeric(names(sort(table(x), decreasing = TRUE))[1])
+}
+
+g_0_val = mode(y)
+null_model = function(x) {
+  g_0_val
+}
+
+cat("misclassification count in null model:", sum(null_model() != y), "\n")
+rm(g_0_val, null_model)
 ```
 
 * Fit a threshold model to `y` using the feature `Sepal.Length`. Write your own code to do this. What is the estimated value of the threshold parameter? Save the threshold value as `threshold`. 
 
 ```{r}
-#TO-DO
+# Cannot make more than 100 errors (since there's 100 rows)
+minimum_error = length(y) + 1
+threshold = Xy$Sepal.Length
+for (i in seq(from = 1, to = length(y), by = 1)) {
+  # Use i-th Sepal.Length as the threshold
+  current_threshold = Xy$Sepal.Length[i]
+  
+  # Compute predictions using this threshold
+  predictions = (Xy$Sepal.Length >= current_threshold)
+  
+  # Compute misclassification errors
+  misclassification_count = sum(predictions != y)
+  
+  if (misclassification_count < minimum_error) {
+    threshold = current_threshold
+    minimum_error = misclassification_count
+  }
+}
+cat("The estimated value of the treshold is", threshold, "cm\n")
+rm(i, current_threshold, predictions, misclassification_count)
 ```
 
 What is the total number of errors this model makes?
 
 ```{r}
-#TO-DO
+cat("The total number of errors this model makes is", minimum_error, "\n")
+# sum((Xy$Sepal.Length >= threshold) != y)
 ```
 
 Does the threshold model's performance make sense given the following summaries:
@@ -169,13 +333,27 @@ summary(iris[iris$Species == "setosa", "Sepal.Length"])
 summary(iris[iris$Species == "versicolor", "Sepal.Length"])
 ```
 
-TO-DO: Write your answer here in English.
+Yes. Recall that our response vector `y` uses `1` to denote `versicolor` and `0` to denote `setosa`. Our model
+predicts `1` the `Sepal.Length` is at least $5.5$ cm. Indeed, the the `versicolor` Sepal length for the
+`versicolor` variety tends to be at least that long, with a 1st quartile value of $5.6$ cm, just above
+the threshold. Meanwhile, the `setosa` variety has a 3rd quartile value of $5.2$ cm, just below the threshold.
+
+```{r}
+```
 
 Create the function `g` explicitly that can predict `y` from `x` being a new `Sepal.Length`.
 
 ```{r}
 g = function(x){
-  #TO-DO
+  x >= threshold
 }
+# Should predict 1 since the threshold is 5.5
+g(5.6)
+g(5.5)
+
+# Should be 0 since the threshold is 5.5
+g(5.4)
+
+rm(list = ls())
 ```
 
