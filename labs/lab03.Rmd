@@ -1,6 +1,6 @@
 ---
 title: "Lab 3 MATH 342W"
-author: "Your Name Here"
+author: "Sergio E. Garcia Tapia"
 output: pdf_document
 date: "11:59PM February 16"
 ---
@@ -11,18 +11,57 @@ date: "11:59PM February 16"
 You will code the "perceptron learning algorithm" for arbitrary number of features p. Take a look at the comments above the function. Respect the spec below:
 
 ```{r}
-#' TO-DO: Provide a name for this function 
+#' perceptron_learning_algorithm:
+#' 
+#' Given a linearly separable data set with feature inputs Xinput and binary responses y_binary,
+#' employs the Perceptron Learning Algorithm in an attempt to find a vector of feature weights
+#' and a bias that define a hyperplane that classifies the data.
 #'
-#' TO-DO: Explain what this function does in a few sentences
+#' @param Xinput      An n by p matrix, where each row is an input from the data set.
+#' @param y_binary    An n by 1 vector, where each value is 0 or 1, and each value corresponds to an input from the data set.
+#' @param MAX_ITER    The maximum number of iterations that we allow for the algorithm. This prevents the
+#'                    algorithm from running forever if the data set is not linearly separable.
+#'                    A higher number of iterations may lead to a smaller classification error.
+#' @param w           An initial vector of feature weights, size p + 1. If none is specified, a zero vector is used.
 #'
-#' @param Xinput      TO-DO: Explain this
-#' @param y_binary    TO-DO: Explain this
-#' @param MAX_ITER    TO-DO: Explain this
-#' @param w           TO-DO: Explain this
-#'
-#' @return            The computed final parameter (weight) as a vector of length p + 1
+#' @return            The computed final parameter (weight) as a vector of length p + 1. The first entry is
+#'                    the bias, and the remaining entries are the feature weights.
 perceptron_learning_algorithm = function(Xinput, y_binary, MAX_ITER = 1000, w = NULL){
-  #TO-DO
+  n = nrow(Xinput)
+  p = ncol(Xinput)
+  
+  if (length(y_binary) != n) {
+    stop("Mismatch in the number of inputs and the number of outputs.");
+  }
+  
+  # Verify Xinput and y_binary have compatible dimensions (and w, too)
+  
+  if (!is.null(w) & (length(w) != (p + 1))) {
+    stop("The initial w vector must be exactly p + 1 where p is the number of features in Xinput.")
+  }
+  
+  if (is.null(w)) {
+    w = rep(0, times = p + 1)
+  }
+  
+  # Extend to dimension p + 1 by prepending column of 1s (corresponding to bias).
+  X_aug = cbind(1, Xinput)
+  
+  for (t in 1:MAX_ITER) {
+    w_prev = w
+    # Compute the predictions using the previous w vector.
+    y_hat = as.numeric((X_aug %*% w) > 0)
+    
+    # Improve the vector
+    for (i in 1:n) {
+      w = w + (y_binary[i] - y_hat[i]) * X_aug[i,]
+    }
+    
+    if (identical(w, w_prev)) {
+      break
+    }
+  }
+  w
 }
 ```
 
@@ -52,21 +91,47 @@ simple_viz_obj = ggplot(Xy_simple, aes(x = first_feature, y = second_feature, co
 simple_viz_obj
 ```
 
-TO-DO: Explain this picture.
+The plot depicts a perfectly linearly separable data set. The feature space $\mathcal{X}$ is $\mathbb{R}^2$, and $\mathcal{Y}$ is a binary response space.
+Each point plotted on the plane represents an input $\mathbf{x}_i\in \mathcal{X}$ part of an input-output pair in $\mathbb{D}$, and its color represents
+its corresponding output in $\mathbb{D}$ (which is one of two colors, since the response is binary).
 
 Now, let us run the algorithm and see what happens:
 
 ```{r}
 w_vec_simple_per = perceptron_learning_algorithm(
-  cbind(Xy_simple$first_feature, Xy_simple$second_feature),
-  as.numeric(Xy_simple$response == 1))
+  Xinput = cbind(Xy_simple$first_feature, Xy_simple$second_feature),
+  y_binary = as.numeric(Xy_simple$response == 1))
 w_vec_simple_per
 ```
 
 Explain this output. What do the numbers mean? What is the intercept of this line and the slope? You will have to do some algebra.
 
-TO-DO
+The perceptron learning algorithm attempts to find the components of a hyperplane that divides the data set such that
+it effectively performs the binary classification (i.e., on one side, all responses are $0$, while on other, they are $1$).
+The hyperplane is determined by the bias term $b = -17$, and the feature weights $w_1 = 4$ and $w_2 = 4$. The line
+is given by the equation
 
+$$
+w_1x+w_2y+b=0\\
+4x + 4y - 17 = 0\\
+y = x + \frac{17}{4}
+$$
+or, in vector notation,
+
+$$
+\begin{bmatrix}
+4\\
+4
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+x\\
+y
+\end{bmatrix}
+-17
+=
+0
+$$
 
 ```{r}
 simple_perceptron_line = geom_abline(
@@ -78,16 +143,16 @@ simple_viz_obj + simple_perceptron_line
 
 Explain this picture. Why is this line of separation not "satisfying" to you?
 
-TO-DO 
+While it perfectly classifies the historical data, it does not seem to maximize the size of the wedge between the
+two sides. In general, there are infinitely many lines that the perceptron could choose, so it's unreasoable
+to expect it to choose the best one.
 
 For extra credit, program the maximum-margin hyperplane perceptron that provides the best linear discrimination model for linearly separable data. Make sure you provide ROxygen documentation for this function.
 
 ```{r}
+# Skipping
 #TO-DO
 ```
-
-
-
 
 ## Support Vector Machine vs. Perceptron
 
@@ -128,7 +193,6 @@ simple_svm_line = geom_abline(
     intercept = -w_vec_simple_svm[1] / w_vec_simple_svm[3], 
     slope = -w_vec_simple_svm[2] / w_vec_simple_svm[3], 
     color = "purple")
-
 simple_viz_obj + simple_svm_line
 ```
 
@@ -136,8 +200,8 @@ Source the `perceptron_learning_algorithm` function from lab 2. Then run the fol
 
 ```{r}
 w_vec_simple_per = perceptron_learning_algorithm(
-  cbind(Xy_simple$first_feature, Xy_simple$second_feature),
-  as.numeric(Xy_simple$response == 1)
+  Xinput = cbind(Xy_simple$first_feature, Xy_simple$second_feature),
+  y_binary = as.numeric(Xy_simple$response == 1)
 )
 simple_perceptron_line = geom_abline(
     intercept = -w_vec_simple_per[1] / w_vec_simple_per[3], 
@@ -149,11 +213,12 @@ simple_viz_obj + simple_perceptron_line + simple_svm_line
 
 Is this SVM line a better fit than the perceptron?
 
-TO-DO
+Yes, it seems to minimize the average SHE, thereby attaining the maximum margin hyperplane.
 
 Now write your own implementation of the linear support vector machine algorithm using the Vapnik objective function we discussed in class.
 
 ```{r}
+pacman::p_load(optimx)
 #' This function implements the hinge-loss + maximum margin linear support vector machine algorithm of Vladimir Vapnik (1963).
 #'
 #' @param Xinput      The training data features as an n x p matrix.
@@ -161,61 +226,230 @@ Now write your own implementation of the linear support vector machine algorithm
 #' @param MAX_ITER    The maximum number of iterations the algorithm performs. Defaults to 5000.
 #' @param lambda      A scalar hyperparameter trading off margin of the hyperplane versus average hinge loss.
 #'                    The default value is 1.
-#' @return            The computed final parameter (weight) as a vector of length p + 1
+#' @return            The computed final parameter (weight) as a vector of length p + 1. The bias term -b is in w0.
 linear_svm_learning_algorithm = function(Xinput, y_binary, MAX_ITER = 5000, lambda = 0.1){
-  #TO-DO
+  n = nrow(Xinput)
+  p = ncol(Xinput)
+  
+  if (n != length(y_binary)) {
+    stop("The number of rows in the matrix of inputs does not match the number of entries in the output.")
+  }
+  if (lambda <= 0) {
+    stop("lambda must be positive.")
+  }
+  
+  w = rep(0, times = (p + 1))
+  # Since we use -1, the bias will term in w0 will be -b.
+  X = cbind(-1, Xinput)
+  objective_function = function(wvec) {
+    # pmax(0, v), where v is a vector, computes a vector where the ith entry is max(0, v[i])
+    avg_SHE = mean(pmax(0, 1/2 - (y_binary - 1/2) * (X %*% wvec)))
+    avg_SHE + lambda * sqrt(sum(wvec^2)) # or norm(wvec, type="2")
+  }
+  result = optimx(w, objective_function, method="BFGS")
+  unlist(result[1, 1:(p + 1)])
 }
 ```
 
 If you wrote code (the extra credit), run your function using the defaults and plot it in brown vis-a-vis the previous model's line:
 
 ```{r}
-svm_model_weights = linear_svm_learning_algorithm(X_simple_feature_matrix, y_binary)
+# To understand the factor-to-numeric conversion in the response, see https://stackoverflow.com/a/3418192/23023338
+svm_model_weights = linear_svm_learning_algorithm(
+  Xinput = cbind(Xy_simple$first_feature, Xy_simple$second_feature),
+  y_binary = as.numeric(levels(Xy_simple$response))[Xy_simple$response],
+  lambda = 0.1
+)
 my_svm_line = geom_abline(
-    intercept = svm_model_weights[1] / svm_model_weights[3],#NOTE: negative sign removed from intercept argument here
+    intercept = svm_model_weights[1] / svm_model_weights[3],#NOTE: negative sign removed from intercept argument here (see documentation)
     slope = -svm_model_weights[2] / svm_model_weights[3], 
     color = "brown")
-simple_viz_obj  + my_svm_line
+simple_viz_obj  + simple_svm_line + my_svm_line
 ```
 
 Is this the same as what the `e1071` implementation returned? Why or why not?
 
-TO-DO
+It is nearly the same. In fact, I plotted both lines, the one obtained with `e1071` and from the manual
+implementation of SVM, and they are overlapped in the image above. We can directly compare the parameters
+from `e1071` and our computed parameters:
+
+```{r}
+cat("e1071 slope\t:", -w_vec_simple_svm[1] / w_vec_simple_svm[3], "\tour slope:\t", svm_model_weights[1] / svm_model_weights[3],
+    "\ne1071 intercept\t:", -w_vec_simple_svm[2] / w_vec_simple_svm[3], "\tour intercept:\t", -svm_model_weights[2] / svm_model_weights[3], "\n")
+```
+It does differ, and part of it might be our choice of $\lambda$, as well as differences related to floating-point computation.
 
 ## Multinomial Classification using KNN
 
 Write a k = 1 nearest neighbor algorithm using the Euclidean distance function. The following comments are standard "Roxygen" format for documentation. Hopefully, we will get to packages at some point and we will go over this again. It is your job also to fill in this documentation.
 
 ```{r}
-#' TO-DO: Provide a name for this function 
+#' nn_nalgorithm_predict
 #'
-#' TO-DO: Explain what this function does in a few sentences
+#' Uses the Nearest Neighbor Model to make predictions on the data in Xtest based on the values
+#' of the data set formed by Xinput and y_binary. To determine the nearest point, the
+#' function uses Euclidian distance (vector 2-norm).
 #'
-#' @param Xinput      TO-DO: explain this argument
-#' @param y_binary    TO-DO: explain this argument
-#' @param Xtest       TO-DO: explain this argument
-#' @return            TO-DO: explain this argument
+#' @param Xinput      An n by p matrix, with n observations, and each observation has p features.
+#' @param y_binary    A binary vector (entries 0 or 1) of n responses, each corresponding to an observation in Xinput.
+#' @param Xtest       An m by p matrix with m inputs for which the model will attempt to predict a response.
+#' @return            The responses predicted by the model for the inputs Xtest.
 nn_algorithm_predict = function(Xinput, y_binary, Xtest){
-  #TO-DO
+  n_train = nrow(Xinput)
+  
+  if (n_train != length(y_binary)) {
+    stop("Incompatible number of observations in Xinput and ybinary.")
+  }
+  if (ncol(Xinput) != ncol(Xtest)) {
+    stop("The number of features in the traning set does not match the number of features in the test set.")
+  }
+  
+  n_test = nrow(Xtest)
+  y_test = array(NA, dim = n_test)
+  
+  for (i_test in 1:n_test) {
+    x_star = Xtest[i_test, ]
+    
+    # Compute the (2-norm) distance from x_star to each x in our data set
+    distances = apply(Xinput, 1, function(x) { sum((x - x_star)^2)})
+    
+    # Find index of the closest in our training set
+    nearest_index = which.min(distances)
+    
+    # Predict the output for this test input to be the output for this nearest neighbor
+    y_test[i_test] = y_binary[nearest_index]
+  }
+  
+  y_test
 }
+?apply
 ```
 
 Write a few tests to ensure it actually works:
 
 ```{r}
-#TO-DO
+Xtrain = rbind(
+  c(5,5,5,5),
+  c(13,13,13,13),
+  c(37, 37, 37, 37)
+)
+y_binary = c('a', 'b', 'c')
+# Used later in the lab, but can use it here too, see documentation: https://testthat.r-lib.org/reference/index.html
+pacman::p_load(testthat)
+?testthat
+test_that("test data is input data", {
+  expect_setequal(nn_algorithm_predict(Xtrain, y_binary, Xtrain), y_binary)
+})
+test_that("nearest point is chosen", {
+  Xtest = rbind(
+    c(11,  11, 11,  11),
+    c(2.5, 3.1,-1.2, 4),
+    c(7, 7, 7, 7),
+    c(15,14,10, 11),
+    c(29,29,29,29)
+  )
+  ytest_expected = c('b', 'a', 'a', 'b', 'c')
+  expect_setequal(nn_algorithm_predict(Xtrain, y_binary, Xtest), ytest_expected)
+})
 ```
 
 We now add an argument `d` representing any legal distance function to the `nn_algorithm_predict` function. Update the implementation so it performs NN using that distance function. Set the default function to be the Euclidean distance in the original function. Also, alter the documentation in the appropriate places.
 
 ```{r}
-#TO-DO
+#' nn_nalgorithm_predict
+#'
+#' Uses the Nearest Neighbor Model to make predictions on the data in Xtest based on the values
+#' of the data set formed by Xinput and y_binary. The meaning of "nearest" is determined
+#' by the d function parameter.
+#'
+#' @param Xinput      An n by p matrix, with n observations, and each observation has p features.
+#' @param y_binary    A binary vector (entries 0 or 1) of n responses, each corresponding to an observation in Xinput.
+#' @param Xtest       An m by p matrix with m inputs for which the model will attempt to predict a response.
+#' @param d           A distance function that accepts two vectors of equal length. If NULL (default), then uses Euclidian distance (vector 2-norm).
+#' @return            The responses predicted by the model for the inputs Xtest.
+nn_algorithm_predict = function(Xinput, y_binary, Xtest, d=NULL){
+  n_train = nrow(Xinput)
+  n_test = nrow(Xtest)
+  y_test = array(NA, dim = n_test)
+  
+  # By default use Euclidian distance
+  if (is.null(d)) {
+    d = function(u, v) {sum((u - v)^2)}
+  }
+  
+  for (i_test in 1:n_test) {
+    x_star = Xtest[i_test, ]
+    
+    # Compute the distance from x_star to each x in our data set
+    distances = apply(Xinput, 1, function(x) { d(x, x_star)})
+    
+    # Find index of the closest in our training set
+    nearest_index = which.min(distances)
+    
+    # Predict the output for this test input to be the output for this nearest neighbor
+    y_test[i_test] = y_binary[nearest_index]
+  }
+  
+  y_test
+}
 ```
 
 For extra credit (unless you're a masters student), add an argument `k` to the `nn_algorithm_predict` function and update the implementation so it performs KNN. In the case of a tie, choose yhat randomly. Set the default `k` to be the square root of the size of D which is an empirical rule-of-thumb popularized by the "Pattern Classification" book by Duda, Hart and Stork (2007). Also, alter the documentation in the appropriate places.
 
 ```{r}
 #TO-DO for the 650 students but extra credit for undergrads
+# Given a numeric vector, computes the mode (the most repeated value).
+mode = function(x) {
+  as.numeric(names(sort(table(x), decreasing = TRUE))[1])
+}
+
+#' knn_algorithm_predict
+#'
+#' Uses the k Nearest Neighbors Model to make predictions on the data in Xtest based on the values
+#' of the data set formed by Xinput and y_binary. The meaning of "nearest" is determined
+#' by the d function parameter.
+#'
+#' @param Xinput      An n by p matrix, with n observations, and each observation has p features.
+#' @param y_binary    A binary vector (entries 0 or 1) of n responses, each corresponding to an observation in Xinput.
+#' @param Xtest       An m by p matrix with m inputs for which the model will attempt to predict a response.
+#' @param d           A distance function that accepts two vectors of equal length. If NULL (default), then uses Euclidian distance (vector 2-norm).
+#' @param k           The (integer) number of neighbors to consider. If a non-positive equantity is provided,
+#'                    uses the sqrt(n) by default.
+#'                    
+#' @return            The responses predicted by the model for the inputs Xtest.
+knn_algorithm_predict = function(Xinput, y_binary, Xtest, d=NULL, k = 0){
+  n_train = nrow(Xinput)
+  n_test = nrow(Xtest)
+  y_test = array(NA, dim = n_test)
+  
+  # By default use Euclidian distance
+  if (is.null(d)) {
+    d = function(u, v) {sum((u - v)^2)}
+  }
+  
+  if (k > n_train) {
+    stop("Cannot consider more neighbors than points in the data set.")
+  }
+  
+  if (k <= 0) {
+    k = floor(sqrt(n_train))
+  }
+  
+  for (i_test in 1:n_test) {
+    x_star = Xtest[i_test, ]
+    
+    # Compute the distance from x_star to each x in our data set
+    distances = apply(Xinput, 1, function(x) { d(x, x_star)})
+    
+    # Take the k smallest
+    k_nearest = order(distances, decreasing = FALSE)[1:k]
+    
+    # Predict the output for this test input to be the mode of responses of the k nearest neighbors
+    y_test[i_test] = mode(y[k_nearest])
+  }
+  
+  y_test
+}
 ```
 
 ## Regression via OLS with one feature
@@ -223,6 +457,7 @@ For extra credit (unless you're a masters student), add an argument `k` to the `
 Let's quickly recreate the sample data set from practice lecture 7:
 
 ```{r}
+rm(list = ls())
 set.seed(1984)
 n = 20
 x = runif(n)
@@ -233,9 +468,10 @@ beta_1 = -2
 Compute h^* as `h_star_x`, then draw epsilon from an iid N(0, 0.33^2) distribution as `epsilon`, then compute the vector y.
 
 ```{r}
-h_star_x = #TO-DO 
-epsilon = #TO-DO
-y = #TO-DO
+# Copy similar to what is in the practice lecture notes
+h_star_x = beta_0 + beta_1 * x
+epsilon = rnorm(n, mean = 0, sd = 0.33)
+y = h_star_x + epsilon
 ```
 
 Graph the data by running the following chunk:
@@ -250,14 +486,71 @@ simple_viz_obj
 
 Does this make sense given the values of beta_0 and beta_1?
 
+Yes. The values $\beta_0=3$ and $\beta_1=-2$ describe a line with a slope of $-2$ and a $y$-intercept of $3$.
+If we were to draw a line through these points, points would cluster around it. Put another way, $h^*$
+equals $f$, so there is no misspecification error; the only error is ignorance error.
+
 Write a function `my_simple_ols` that takes in a vector `x` and vector `y` and returns a list that contains the `b_0` (intercept), `b_1` (slope), `yhat` (the predictions), `e` (the residuals), `SSE`, `SST`, `MSE`, `RMSE` and `Rsq` (for the R-squared metric). Internally, you can only use the functions `sum` and `length` and other basic arithmetic operations. You should throw errors if the inputs are non-numeric or not the same length. You should also name the class of the return value `my_simple_ols_obj` by using the `class` function as a setter. No need to create ROxygen documentation here.
 
 ```{r}
+# Do it by hand using sum and mean and so on, instead of the built-in functions that do it all.
+# Note: We are skipping Rsq since we did not have time to discuss it in lecture.
+
+#' my_simple_ols
+#'
+#' Computes the least squares regression line for a univariate data set.
+#'
+#' @param x     An input vector with n numeric entries.
+#' @param y     A response vector with n numeric entries.
+#'                    
+#' @return      A list containing:
+#'              - b_0: A numeric value, the intercept of the least squares regression line,
+#'              - b_1: A numeric value, the slope of the least squares regression line,
+#'              - yhat: An numeric vector of length n, consists of the predictions using the least squares regression on line on the input x.
+#'              - e: A numeric vector of length n, consists of the residuals computed from the predictions and the given responses.
+#'              - SSE: A numeric value, the sum-of-squared errors (Squared response units).
+#'              - SST: A numeric value, the sum-of-square differences between the observed responses y and the mean of y.
+#'              - MSE: A numeric value, the mean-of-squared errors (Squared response units).
+#'              - RMSE: A numeric value, the root-mean-of-squared errors (Response units).
 my_simple_ols = function(x, y){
-  ols_obj = list()
-  #TO-DO
+  if ((class(x) != "numeric") | (class(y) != "numeric")) {
+    stop("expected only numeric data")
+  }
+  if (length(x) != length(y)) {
+    stop("mismatch in the vector sizes")
+  }
   
+  ols_obj = list()
   class(ols_obj) = "my_simple_ols_obj"
+  
+  n = length(x)
+  xbar = sum(x) / n
+  ybar = sum(y) / n
+  
+  
+  # Compute the parameters for the least squares regression line
+  b_1 = (sum(x*y) - (n * xbar * ybar)) / (sum(x^2) - (n * xbar^2))
+  b_0 = ybar - (b_1 * xbar)
+  
+  # Compute predictions and residuals
+  yhat = b_0 + b_1 * x
+  e = y - yhat
+  
+  # Sum of squared errors
+  SSE = sum(e^2)
+  SST = sum((y - ybar)^2) # sum of total squares, thanks to Allen.
+  MSE = SSE / (n - 2)
+  RMSE = sqrt(MSE)
+  
+  ols_obj$b_0 = b_0
+  ols_obj$b_1 = b_1
+  ols_obj$yhat = yhat
+  ols_obj$e = e
+  ols_obj$SSE = SSE
+  ols_obj$SST = SST
+  ols_obj$MSE = MSE
+  ols_obj$RMSE = RMSE
+  
   ols_obj
 }
 ```
@@ -265,46 +558,75 @@ my_simple_ols = function(x, y){
 Verify your computations are correct for the vectors `x` and `y` from the first chunk using the `lm` function in R:
 
 ```{r}
-lm_mod = #TO-DO
-my_simple_ols_mod = #TO-DO
+lm_mod = lm(y ~ x)
+my_simple_ols_mod = my_simple_ols(x, y)
 #run the tests to ensure the function is up to spec
 pacman::p_load(testthat)
 expect_equal(my_simple_ols_mod$b_0, as.numeric(coef(lm_mod)[1]), tol = 1e-4)
 expect_equal(my_simple_ols_mod$b_1, as.numeric(coef(lm_mod)[2]), tol = 1e-4)
 expect_equal(my_simple_ols_mod$RMSE, summary(lm_mod)$sigma, tol = 1e-4)
-expect_equal(my_simple_ols_mod$Rsq, summary(lm_mod)$r.squared, tol = 1e-4)
+# Skipped for lab
+# expect_equal(my_simple_ols_mod$Rsq, summary(lm_mod)$r.squared, tol = 1e-4)
 ```
 
 Verify that the average of the residuals is 0 using the `expect_equal`. Hint: use the syntax above.
 
 ```{r}
-#TO-DO
+expect_equal(mean(my_simple_ols_mod$e), 0, tol = 1e-4)
 ```
 
 Create the $X$ matrix for this data example. Make sure it has the correct dimension.
 
 ```{r}
-#TO-DO
+# Add a 1 column in front, i.e., cbind(1, x)
+X = cbind(1, x)
+head(X)
 ```
 
 Use the `model.matrix` function to compute the matrix `X` and verify it is the same as your manual construction.
 
 ```{r}
-#TO-DO
+?model.matrix
+# Adds 1 to matrix just like the previous chunk
+X = model.matrix( ~ x)
+head(X)
 ```
 
 Create a prediction method `g` that takes in a vector `x_star` and `my_simple_ols_obj`, an object of type `my_simple_ols_obj` and predicts y values for each entry in `x_star`. 
 
 ```{r}
+#' g:
+#' 
+#' Using the ordinary least squares model obtained from my_simple_ols, computes predictions
+#' using the input vector x_star
+#'
+#' Computes the least squares regression line for a univariate data set.
+#'
+#' @param my_simple_ols_obj     A my_simple_ols_obj object obtained from the my_simple_ols function.
+#' @param x_star                A numeric vector for which we will predict responses according to the given model.
+#'                    
+#' @return                      A vector of predictions made using my_simple_ols_obj on each entry of x_star.
 g = function(my_simple_ols_obj, x_star){
-  #TO-DO
+  if (class(x_star) != "numeric") {
+    stop("the input x_star must be numeric")
+  }
+  if (class(my_simple_ols_obj) != "my_simple_ols_obj") {
+    stop("must use a my_simple_ols_obj from the my_simple_ols function.")
+  }
+  
+  # Get parameters for least squares regression line.
+  b_0 = my_simple_ols_obj$b_0
+  b_1 = my_simple_ols_obj$b_1
+  
+  # Compute predictions yhat
+  b_0 + b_1 * x_star
 }
 ```
 
 Use this function to verify that when predicting for the average x, you get the average y.
 
 ```{r}
-expect_equal(g(my_simple_ols_obj, mean(x)), mean(y))
+expect_equal(g(my_simple_ols_mod, mean(x)), mean(y))
 ```
 
 
@@ -315,25 +637,36 @@ beta_0 = 3
 beta_1 = -2
 beta = c(beta_0, beta_1)
 
-ns = #TO-DO
-errors = array(NA, length(ns))
-for (i in 1 : length(ns)) {
-  n = ns[i]
+# Pick different sizes, each double of the previous
+n_values = 2^(1:24)
+parameter_errors = array(NA, dim = length(n_values))
+estimation_errors = array(NA, dim = length(n_values))
+for (i in 1 : length(n_values)) {
+  n = n_values[i]
   x = runif(n)
   h_star_x = beta_0 + beta_1 * x 
   epsilon = rnorm(n, mean = 0, sd = 0.33)
   y = h_star_x + epsilon
   
-  #TO-DO
-  errors[i] = sum((beta - b)^2)
+  # Compute least square parameters
+  ols = my_simple_ols(x, y)
+  yhat = ols$yhat
+  b = c(ols$b_0, ols$b_1)
+  
+  parameter_errors[i] = sum((beta - b)^2)
+  estimation_errors[i] = max(abs(h_star_x - yhat))
 }
-errors
+cat("parameter errors:\n")
+t(t(parameter_errors))
+cat("estimation errors:\n")
+t(t(estimation_errors))
 ```
 
 
 We are now going to repeat one of the first linear model building exercises in history --- that of Sir Francis Galton in 1886. First load up package `HistData`.
 
 ```{r}
+rm(list = ls())
 pacman::p_load(HistData)
 ```
 
@@ -344,25 +677,32 @@ data(Galton)
 ```
 
 You now should have a data frame in your workspace called `Galton`. Summarize this data frame and write a few sentences about what you see. Make sure you report n, p and a bit about what the columns represent and how the data was measured. See the help file `?Galton`.
-p is 1 and n is 928 the number of observations  
 
 ```{r}
 pacman::p_load(skimr)
 skim(Galton)
+?Galton
+Galton
+cat("n =", nrow(Galton), ", p =", ncol(Galton))
 ```
 
-TO-DO
+The data frame consists 928 rows (the value of $n$). Each row consists of two entries (apart from the initial ID column): the height (in inches) of an adult child in one column (the last column, or response), and the average of the heights (also in inches) of the child's parents on the other (the second column, the only feature). Thus, the value of $p$ is $1$. The rows appear to be sorted by child height. The means of both columns are close, with a parents having a mean of 68.3 and the children a mean of 68.1. The standard deviations are also relatively small, at 1.79 and 2.52, respectively.
 
 Find the average height (include both parents and children in this computation).
 
 ```{r}
-#TO-DO
+ybar = mean(Galton$child)
+xbar = mean(Galton$parent)
 ```
 
 If you were predicting child height from parent and you were using the null model, what would the RMSE be of this model be?
 
 ```{r}
-#TO-DO
+g_0 = function(x) {
+  ybar
+}
+RMSE = sqrt(sum((Galton$child - g_0())^2) / (length(Galton$child) - 2))
+cat("The RMSE using the null model (average value of", g_0(), "inches) would be", RMSE, "inches.\n")
 ```
 
 Note that in Math 241 you learned that the sample average is an estimate of the "mean", the population expected value of height. We will call the average the "mean" going forward since it is probably correct to the nearest tenth of an inch with this amount of data.
@@ -370,24 +710,46 @@ Note that in Math 241 you learned that the sample average is an estimate of the 
 Run a linear model attempting to explain the childrens' height using the parents' height. Use `lm` and use the R formula notation. Compute and report b_0, b_1, RMSE and R^2. 
 
 ```{r}
-#TO-DO
+# Skip R^2 since we did not go over it in class.
+# Similar to y ~ x in class, but here the phenomenon is children's height based on parent's height.
+linear_model = lm(formula = child ~ parent, data = Galton)
+b_0 = linear_model$coefficients[1]
+b_1 = linear_model$coefficients[2]
+RMSE = summary(linear_model)$sigma
+
+b_0
+b_1
+RMSE
+cat("b_0 =", b_0, ", b_1 =", b_1, ", RMSE =", RMSE, "inches.\n")
 ```
 
 Interpret all four quantities: b_0, b_1, RMSE and R^2. Use the correct units of these metrics in your answer.
 
-TO-DO
+The value $b_0$ is the intercept of the least squares regression line deduced by the linear model.
+If a parent were to have height 0, this would predict a child have a height of $23.9$ inches.
+Of course, that's not physically possible. The value $b_1$ is more meaningful. It has no units
+(technically, it's inches / inches, and these cancel). Its value signifies that, in absence of
+any other factors, when the average height of the parent height increases by $1$ inches, the height of the child
+increases by $0.65$ inches. This suggests that children tend to be shorter than the average height
+of the parents. The RMSE suggests that there's an average error of about 2.4 inches in the child height
+predicted by the linear model and the actual height observed in the children.
 
 How good is this model? How well does it predict? Discuss.
 
-TO-DO
+We saw earlier that the null model has a RMSE of approximately $2.51$ inches, whereas our model has an
+RMSE of approximately $2.24$ inches. This presents an improvement over the null model, though
+small. The value $2.24$ is relatively small in comparison to the values, which range from
+around 60 to 70 inches. An error of about $2.24$ suggests our predictions are off by about 3 to 4%,
+which is fairly accurate.
 
 It is reasonable to assume that parents and their children have the same height? Explain why this is reasonable using basic biology and common sense.
 
-TO-DO
+No. Many other factors beyond the child's parent may influence their height. For example, perhaps genes from their grandparents might
+be stronger, and they may end up substantially taller than both of their parents.
 
 If they were to have the same height and any differences were just random noise with expectation 0, what would the values of beta_0 and beta_1 be?
 
-TO-DO
+They would be $beta_0=0$ and $beta_1=1$, reflecting a one-to-one relationship via a line of slope 1 through the origin.
 
 Let's plot (a) the data in D as black dots, (b) your least squares line defined by b_0 and b_1 in blue, (c) the theoretical line beta_0 and beta_1 if the parent-child height equality held in red and (d) the mean height in green.
 
@@ -398,7 +760,7 @@ ggplot(Galton, aes(x = parent, y = child)) +
   geom_jitter() +
   geom_abline(intercept = b_0, slope = b_1, color = "blue", size = 1) +
   geom_abline(intercept = 0, slope = 1, color = "red", size = 1) +
-  geom_abline(intercept = avg_height, slope = 0, color = "darkgreen", size = 1) +
+  geom_abline(intercept = ybar, slope = 0, color = "darkgreen", size = 1) +
   xlim(63.5, 72.5) + 
   ylim(63.5, 72.5) +
   coord_equal(ratio = 1)
@@ -406,19 +768,21 @@ ggplot(Galton, aes(x = parent, y = child)) +
 
 Fill in the following sentence: 
 
-TO-DO: Children of short parents became ... on average and children of tall parents became ... on average.
+Children of short parents became taller on average and children of tall parents became shorter on average.
 
 Why did Galton call it "Regression towards mediocrity in hereditary stature" which was later shortened to "regression to the mean"?
 
-TO-DO
+Because rather than the 1-1 relationship between a child's height and their parent's, height, the child's height tended towards
+the average child height in the data set (the blue line tended towards the green line).
 
 Why should this effect be real?
 
-TO-DO
+I don't think that it needs to be. A different distribution of data could have the same mean
+and the least squares regression line may instead tilt away from the mean.
 
 You now have unlocked the mystery. Why is it that when modeling with y continuous, everyone calls it "regression"? Write a better, more descriptive and appropriate name for building predictive models with y continuous.
 
-TO-DO
+Linear approximation of continuous data.
 
 You can now clear the workspace.
 
@@ -429,6 +793,7 @@ rm(list = ls())
 Create a dataset D which we call `Xy` such that the linear model has R^2 about 50\% and RMSE approximately 1.
 
 ```{r}
+# Note: Dr. Kapelner mentioned these should be omitted, since we did not discuss R^2
 x = #TO-DO
 y = #TO-DO
 Xy = data.frame(x = x, y = y)
@@ -437,6 +802,7 @@ Xy = data.frame(x = x, y = y)
 Extra credit but required for 650 students: create a dataset D and a model that can give you R^2 arbitrarily close to 1 i.e. approximately 1 - epsilon but RMSE arbitrarily high i.e. approximately M.
 
 ```{r}
+# Note: Dr. Kapelner mentioned these should be omitted, since we did not discuss R^2
 epsilon = 0.01
 M = 1000
 #TO-DO
