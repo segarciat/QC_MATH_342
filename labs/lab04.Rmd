@@ -1,0 +1,438 @@
+---
+title: "Lab 4 MATH 342W"
+author: "Sergio E. Garcia Tapia"
+output: pdf_document
+date: "11:59PM March 2"
+---
+
+Let's load up the Galton data again
+```{r}
+pacman::p_load(HistData)
+data(Galton)
+```
+
+If you were predicting child height from parent and you were using the null model, what would the Rsq be of this model? Compute from first principles.
+
+The appropriate formulas are:
+
+$$
+SSE_0 = \sum_{i=1}^{n}e_{i, 0}^2\\
+SST = \sum_{i=1}^{n}(y_i-\bar{y})^2\\
+R^2 = 1 - \frac{SSE_0}{SST}
+$$
+
+```{r}
+null_model = lm(child ~ 1, Galton)
+e_0 = null_model$residuals
+SSE_0 = sum(e_0^2)
+SST = sum((Galton$child - mean(Galton$child))^2)
+Rsq = 1 - SSE_0 / SST
+Rsq
+```
+
+Note that in Math 241 you learned that the sample average is an estimate of the "mean", the population expected value of height. We will call the average the "mean" going forward since it is probably correct to the nearest tenth of an inch with this amount of data.
+
+Run a linear model attempting to explain the childrens' height using the parents' height. Use `lm` and use the R formula notation. Compute and report RMSE and R^2. 
+
+```{r}
+linear_model = lm(child ~ parent, Galton)
+RMSE = summary(linear_model)$sigma
+Rsq = summary(linear_model)$r.squared
+cat("RMSE =", RMSE, ", R^2 =", Rsq, "\n")
+```
+
+What percentage of the variance was explained?
+
+The percentage of variance explained is given by $R^2$, which is about $21.05\%$.
+
+Is this percentage of the variance explained "good"?
+
+No it's not, because it only explains 21 percent of height variation from parent to child.
+A percentage close to 100% is ideal.
+
+Find a 95\% reasonable interval for a child's height who's mother-father-average height is 70in.
+
+In class we learned that the 95\% confidence interval is given by
+
+$$
+CI_{95\%, y} = [\hat{y}-2\cdot RMSE, \hat{y}+ 2\cdot RMSE]
+$$
+```{r}
+parent_height = 70
+# Predict child height when their parent's average height is 70 inches.
+y_hat = predict(linear_model, data.frame(parent = parent_height))
+cat("Given parents with average height of", parent_height ,"inches, the predicted child height is", y_hat, "inches.\n")
+cat("Between", y_hat - 2 * RMSE, "inches and", y_hat + 2 * RMSE, "inches.\n")
+```
+
+Now convert the units from inches to feet in the dataset D. Run the regression again and report RMSE and R^2
+
+```{r}
+inches_per_feet = 12
+Galton_feet = Galton / inches_per_feet
+linear_model_feet = lm(child ~ parent, Galton_feet)
+RMSE_feet = summary(linear_model_feet)$sigma
+Rsq_feet = summary(linear_model_feet)$r.squared
+Rsq_feet
+RMSE_feet
+cat("RMSE =", RMSE, "in, RMSE_feet =", RMSE_feet, "ft, R^2 =", Rsq, "Rsq_feet =", Rsq_feet, "\n")
+```
+
+Why did RMSE change but Rsq did not change?
+
+Intuitively, since all inputs and outputs are divided by $12$, it seems reasonable that the $SSE$ and $SST$ both change
+by the same factor. Since $R^2 = 1 - \frac{SSE}{SST}$, it would also seem reasonable that factor would cancel.
+However, we can show this explicitly. First, consider the least square coefficients:
+
+$$
+b_{1, feet} = \frac{\sum_{i=1}^{n}x_{i, ft}y_{i, ft}-n\bar{x}_{ft}\bar{y}_{ft}}{\sum_{i=1}^{n}x_{i, ft}^2-n\bar{x}^2_{ft}}\\
+b_{1, feet} = \frac{\sum_{i=1}^{n}\frac{x_i}{12}\frac{y_{i}}{12}-n\frac{\bar{x}}{12}\frac{\bar{y}}{12}}{\sum_{i=1}^{n}(\frac{x_i}{12})^2-n({\frac{\bar{x}}{12}})^2}\\
+b_{1, feet} = \frac{\sum_{i=1}^{n}x_{i}y_{i}-n\bar{x}\bar{y}}{\sum_{i=1}^{n}x_{i}^2-n\bar{x}^2}\\
+b_{1, feet} = b_1
+$$
+That is, in spite of the change by a factor of $12$, the least square coefficient $b_{1, feet}$ is the same as $b_1$ (before dividing by 12).. However, $b_{0, feet}$
+does change:
+
+$$
+b_{0, ft} = \bar{y}_{ft}-b_{1, ft}\bar{x}_{ft}\\
+b_{0, ft} = \frac{1}{12}\bar{y} - b_{1}\cdot \frac{1}{12}\bar{x} \\
+b_{0, ft} = \frac{1}{12}b_0
+$$
+Hence, $b_{0, ft}$ is a factor of 12 smaller than $b_0$. Now let's see how this factors into the predictions:
+
+$$
+\hat{y}_i = g(x_{ft}) = b_{0, ft} + b_{1, ft}x_{ft} = \frac{1}{12}b_0 + b_1\cdot \frac{1}{12}x=\frac{1}{12}g(x)
+$$
+That is, the predictions are a factor of $12$ smaller than the model in inches. A similar calculation shows the errors are also
+a factor of $12$ smaller. Now
+
+$$
+SSE_{feet} = \sum_{i=1}^{n}e_{i, feet}^2 = \sum_{i=1}^{n}\left(\frac{1}{12}e_i^2\right) = \frac{1}{12^2}\sum_{i=1}^{n}e_i^2=\frac{1}{12^2}SSE
+$$
+Since $RMSE = \sqrt{\frac{1}{n-2}SSE}$, this computation implies that $RMSE_{feet} = \frac{1}{12}RMSE$. On the other hand, $SST_{feet}$ and $SST$ both change
+by a factor of $\frac{1}{12^2}$, which cancels when we divide to compute $R^2$.
+
+Create a dataset D which we call `Xy` such that the linear model has R^2 about 50\% and RMSE approximately 1.
+
+```{r}
+# Hint: Runif
+rm(list=ls())
+n = 100
+x = runif(n, min = 1, max = 3)
+# The RMSE estimates the standard deviation, so using rnorm is ideal since we can specify the standard deviation.
+y = rnorm(n, mean = 1.75 * x, sd = 1)
+mod = lm(y ~ x, data.frame(x = x, y = y))
+cat("R^2=", summary(mod)$r.squared, "RMSE=", summary(mod)$sigma)
+#pacman::p_load(ggplot2)
+#ggplot(data.frame(x = x, y = y)) + geom_point(aes(x = x, y = y))
+rm(list=ls())
+```
+
+Extra credit but required for masters students: create a dataset D and a model that can give you R^2 arbitrarily close to 1 i.e. approximately 1 - epsilon but RMSE arbitrarily high i.e. approximately M.
+
+```{r}
+epsilon = 0.01
+M = 1000
+n = 100000
+x = runif(n, min = 0, max = M * M)
+y = rnorm(n, mean = (1-epsilon) * x  , sd = M)
+mod = lm(y ~ x, data.frame(x = x, y = y))
+cat("R^2=", summary(mod)$r.squared, "RMSE=", summary(mod)$sigma)
+```
+
+
+Create a dataset D which we call `Xy` such that the linear model has R^2 about 0\% but x, y are clearly dependent.
+```{r}
+# Hint: Runif
+n = 1000
+x = runif(n, min = 1, max = 3)
+
+# R^2 approx 0 means SST approx SSE
+y = runif(n, min = 17 - abs(x - 2), max = 17 + abs(x - 2))
+
+# first check that Rsq is around zero
+cat("R^2=", summary(lm(y~x))$r.squared)
+
+# now check dependence AKA "association" visually
+pacman::p_load(ggplot2)
+ggplot(data.frame(x = x, y = y)) + geom_point(aes(x = x, y = y))
+```
+
+Write a function `my_ols` that takes in `X`, a matrix with with p columns representing the feature measurements for each of the n units, a vector of n responses `y` and returns a list that contains the `b`, the p+1-sized column vector of OLS coefficients, `yhat` (the vector of n predictions), `e` (the vector of n residuals), `df` for degrees of freedom of the model, `SSE`, `SST`, `MSE`, `RMSE` and `Rsq` (for the R-squared metric). Internally, you cannot use `lm` or any other package; it must be done manually. You should throw errors if the inputs are non-numeric or not the same length. Or if `X` is not otherwise suitable. You should also name the class of the return value `my_ols` by using the `class` function as a setter. No need to create ROxygen documentation here.
+
+
+```{r}
+#' my_ols
+#' 
+#' Given a matrix X where each row denotes an observation and a vector y consisting
+#' of responses (one for each row in X), uses ordinary linear regression to create
+#' a prediction model.
+#'
+#' @param X           An n by p matrix, where each row is an input from the data set. Entries must be numeric.
+#' @param y           An n by 1 vector, where each value value corresponds to an input row from the data set. Entries must be numeric.
+#' @return            A list of type my_ols_obj with the following entries:
+#'                    - b   : A vector of the least square coefficients.
+#'                    - yhat: A vector of the predictions using the OLS model on the entries in X
+#'                    - df  : The number of degrees of freedom.
+#'                    - SSE : The sum of squared errors.
+#'                    - SST : The sum of squared totals.
+#'                    - MSE : The mean-squared error.
+#'                    - RMSE: The root-mean squared error.
+#'                    - R^2 : The percentage of variance explained
+my_ols = function(X, y){
+  n = nrow(X)
+  p = ncol(X)
+  
+  if (length(y) != n) {
+    stop("response vector y does not match number of rows in design matrix X")
+  }
+  
+  # Degrees of freedom
+  df = p + 1
+  
+  X = cbind(1, X)
+  b = solve(t(X) %*% X) %*% t(X) %*% y
+  yhat = X %*% b
+  e = y - yhat
+  SSE = sum(e^2)
+  SST = sum( (y - mean(y))^2)
+  MSE = (1 / (n - df)) * SSE
+  RMSE = sqrt(MSE)
+  Rsq = 1 - (SSE / SST)
+  
+  obj = list(
+    b = b,
+    yhat = yhat,
+    df = df,
+    SSE = SSE,
+    SST = SST,
+    MSE = MSE,
+    RMSE = RMSE,
+    Rsq = Rsq
+  )
+  class(obj) = "my_ols_obj"
+  obj
+}
+```
+
+Verify that the OLS coefficients for the `Type` of cars in the cars dataset gives you the same results as we did in class (i.e. the ybar's within group). 
+
+```{r}
+cars = MASS::Cars93
+skimr::skim(cars)
+
+# Predict price from car type
+# Apply t(t()) to make into a matrixx
+my_ols_obj = my_ols(X = t(t(cars$Horsepower)), y = cars$Price)
+mod = lm(Price ~ Horsepower, cars)
+
+# Get the b's
+coef(mod)
+#RMSE
+summary(mod)$sigma
+summary(mod)$r.squared
+my_ols_obj$b
+my_ols_obj$RMSE
+my_ols_obj$Rsq
+```
+
+
+Create a prediction method `g` that takes in a vector `x_star` and the dataset D i.e. `X` and `y` and returns the OLS predictions. Let `X` be a matrix with with p columns representing the feature measurements for each of the n units
+
+```{r}
+g = function(x_star, X, y){
+  my_ols_obj = my_ols(X, y)
+  b = my_ols_obj$b
+  
+  x_star %*% b
+}
+```
+
+
+Load up the famous iris dataset. We are going to do a different prediction problem. Imagine the only input x is Species and you are trying to predict y which is Petal.Length. A reasonable prediction is the average petal length within each Species. Prove that this is the OLS model by fitting an appropriate `lm` and then using the predict function to verify.
+
+```{r}
+data(iris)
+head(iris)
+table(iris$Species)
+
+# anova model would take ybar for each species
+lm(Petal.Length ~ Species, iris)
+
+# Setosa is reference variable, so intercept is setosa's mean
+setosa_mean = mean(iris$Petal.Length[iris$Species == "setosa"])
+setosa_mean
+# Each least square coefficient is the mean of Petal.Length for a non-reference species minus the reference mean
+mean(iris$Petal.Length[iris$Species == "versicolor"]) - setosa_mean
+mean(iris$Petal.Length[iris$Species == "virginica"]) - setosa_mean
+```
+
+Construct the design matrix with an intercept, X without using `model.matrix`.
+
+```{r}
+# Similar to the formula inside of lm, no left-hand side because we only want the features
+# Even if we write Peta.Length ~ Species, it still only produces the design matrix X.
+
+X = model.matrix(~ Species, data = iris)
+
+# model.matrix does the following things for us:
+# - It adds the bias (the intercept)
+# - If the matrix already had numerical features it simply prints them out
+# - If there are categorical features, it does the dummification for us.
+
+# Species is nominal categorical
+# When we dummify it, we reduce to 2 columns, but then we add a column for intercepts
+
+head(X)
+# Setosa is our reference variable
+# If a column has 0s in both versicolor and virginica color, 
+# Without model matrix
+X = cbind(1, as.numeric(iris$Species == "versicolor"), as.numeric(iris$Species == "virginica")  )
+X
+```
+
+We now load the diamonds dataset. Skim the dataset using skimr or summary. What is the datatype of the color feature?
+
+
+```{r}
+rm(list = ls())
+pacman::p_load(ggplot2, skimr)
+diamonds = ggplot2::diamonds
+skim(diamonds)
+```
+The datatype of the `color` feature is ordered categorical.
+
+Find the levels of the color feature.
+
+```{r}
+levels(diamonds$color)
+```
+
+Create new feature in the diamonds dataset, `color_as_numeric`, which is color expressed as a continuous interval value. 
+
+```{r}
+diamonds$color_as_numeric = as.numeric(diamonds$color)
+table(diamonds$color_as_numeric)
+table(diamonds$color)
+```
+
+Use that converted feature as the one predictor in a regression. How well does this regression do as measured by RMSE?
+
+```{r}
+mod = lm(price ~ color_as_numeric, data = diamonds)
+RMSE = summary(mod)$sigma
+# 1 feature
+coef(mod)
+cat("RMSE=", RMSE, "\n")
+```
+I don't know how to interpret the performance from the RMSE.
+
+Create new feature in the diamonds dataset, `color_as_nominal`, which is color expressed as a nominal categorical variable. 
+
+```{r}
+?factor
+diamonds$color_as_nominal = factor(diamonds$color, ordered = FALSE)
+diamonds$color_as_nominal
+```
+
+Use that converted feature as the one predictor in a regression. How well does this regression do as measured by RMSE?
+
+```{r}
+# lm does the dummification for  us, that's why RMSE is different
+mod = lm(price ~ color_as_nominal, data = diamonds)
+RMSE = summary(mod)$sigma
+coef(mod)
+cat("RMSE=", RMSE, "\n")
+```
+
+Which regression does better - `color_as_numeric` or `color_as_nominal`? Why?
+
+With `color_as_nominal`, we have 5 more dimensions, which improves the regression.
+
+Now regress both `color_as_numeric` and `color_as_nominal` in a regression. Does this regression do any better (as gauged by RMSE) than either color_as_numeric` or `color_as_nominal` alone?
+
+```{r}
+mod = lm(price ~ color_as_nominal + color_as_numeric, data = diamonds)
+summary(mod)$sigma
+# + just means "and", not concatenation
+```
+
+The RMSE is unchanged. We got nothing more because it's the same information, so the feature we added is redundant.
+
+What are the coefficients (the b vector)? 
+
+```{r}
+coef(mod)
+```
+
+Something appears to be anomalous in the coefficients. What is it? Why?
+
+We have an `NA` for the coefficient associated with the `color_as_numeric` feature. It's because it's not full rank. The `NA` is R's way of saying that
+we had a linearly dependent column, which it removed.
+
+Return to the iris dataset. Find the hat matrix H for this regression.
+
+```{r}
+rm(list = ls())
+data(iris)
+head(iris)
+X = cbind(1, as.matrix(iris[, 1:4]))
+y = as.numeric(iris$Species)
+H = X %*% solve(t(X) %*% X) %*% t(X)
+```
+
+Verify this hat matrix is symmetric using the `expect_equal` function in the package `testthat`.
+
+```{r}
+pacman::p_load(testthat)
+expect_equal(H, t(H))
+# no output means they are equal.
+```
+
+Verify this hat matrix is idempotent using the `expect_equal` function in the package `testthat`.
+
+```{r}
+expect_equal(H, H %*% H)
+# no output means they are equal.
+```
+
+Using the `diag` function, find the trace of the hat matrix.
+
+```{r}
+# Expect to be p + 1
+expect_equal(sum(diag(H)), ncol(X))
+sum(diag(H))
+```
+For masters students: create a matrix X-perpendicular.
+
+```{r}
+# Use the fact that I - H is the matrix of the orthogonal complement of the row space of X, and then use the eigendecomposition function given by R
+```
+
+Using the hat matrix, compute the yhat vector and using the projection onto the residual space, compute the e vector and verify they are orthogonal to each other.
+
+```{r}
+yhat = H %*% y
+e = y - yhat
+expect_equal(sum(e * yhat), 0)
+# no output means they are equal.
+```
+
+Compute SST, SSR and SSE and R^2 and then show that SST = SSR + SSE.
+
+```{r}
+SST = sum((y - mean(y))^2)
+SSR = sum((yhat - mean(y))^2)
+SSE = sum(e^2)
+Rsq = SSR / SST
+expect_equal(SST, SSR + SSE) # no output means they are equal.
+```
+
+Find the angle theta between y - ybar 1 and yhat - ybar 1 and then verify that its cosine squared is the same as the R^2 from the previous problem.
+
+```{r}
+u = y - mean(y)
+v = yhat - mean(y)
+cosine_theta = ( sum(u * v) ) / (sqrt(sum(u^2)) * sqrt(sum(v^2)))
+expect_equal(Rsq, cosine_theta^2)
+```
