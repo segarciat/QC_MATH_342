@@ -1,0 +1,334 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+% Limit the page margin to only 1 inch.
+\usepackage[margin=1in]{geometry}
+
+%Imports biblatex package
+\usepackage[
+backend=biber,
+style=alphabetic
+]{biblatex}
+%\addbibresource{../../algs4e.bib}
+
+% Enables the `align' environment.
+\usepackage{amsmath}
+% Provides useful environments, such as:
+% - \begin{proof} ...\end{proof}
+\usepackage{amsthm}
+\usepackage[most]{tcolorbox}
+
+\newtheorem*{proposition}{Proposition}
+
+% Enables using \mathbb{}, for example \mathbb{N} for the set of natural numbers.
+\usepackage{amssymb}
+
+% Allows using letters in enumerate list environment. Use, for example:
+%\begin{enumerate}[label=(\alph*)]
+% ...
+%\end{enumerate}
+\usepackage[inline]{enumitem}
+
+% Enable importing external graphic files and provides useful commannds, like \graphicspath{}
+\usepackage{graphicx}
+% Images are located in a directory called images in the current directory.
+\graphicspath{{./images/}}
+
+% Make links look better by default.
+% See: https://tex.stackexchange.com/questions/823/remove-ugly-borders-around-clickable-cross-references-and-hyperlinks
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\hypersetup{
+	colorlinks,
+	linkcolor={red!50!black},
+	citecolor={blue!50!black},
+	urlcolor={blue!80!black}
+}
+
+
+% Code Listings. Source:
+% https://stackoverflow.com/questions/3175105/inserting-code-in-this-latex-document-with-indentation
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+	language=Java,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=none,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=3
+}
+
+\newcommand{\prob}{\text{P}}
+%\newcommand{\complement}{\mathsf{c}}
+
+% Define an environment called "ex" (for Exercise) so that I can do: \begin{ex}{1.5}...\end{ex}
+\newenvironment{ex}[2][Exercise]
+{\par\medskip\noindent \textbf{#1 #2.}}
+{\medskip}
+
+% Define a solution environment, similar to ex (exercise) environment.
+\newenvironment{sol}[1][Solution]
+{\par\medskip\noindent \textbf{#1.} }
+{\medskip}
+\title{Lecture 03: MATH 342W: Introduction to Data Science and Machine Learning}
+\author{Sergio E. Garcia Tapia\thanks{Based on lectures of Dr. Adam Kapelner at Queens College.
+		See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course GitHub page}.}}
+\date{February 4, 2025 (last updated \today)}
+
+\begin{document} 
+	\maketitle
+	\section*{Recap}
+	Last class, we mentioned that one of the assumptions we make in this course is
+	that all phenomena can be described mathematically:
+	\begin{align*}
+		y = t(z_1,z_2,\ldots,z_t)
+	\end{align*}
+	This has the following components:
+	\begin{itemize}
+		\item $y$: the output, phenomenon, response, outcome, or dependent variable.
+		\item $t$: exact functional relationship
+		\item $z_1,z_2,\ldots,z_t$: true, causal input information.
+	\end{itemize}
+	\section*{Example of a Phenomenon}
+	We'll consider an example. Let $y\in \{\text{creditworthy}, \text{uncreditworthy}\}$.
+	By creditworthy we mean whether we can expect a person to pay back their loan.
+	We'll encode the as a \textbf{binary response}, assigning $1$ to creditworthy and
+	$0$ to uncreditworthy. The set $\mathcal{Y}=\{0, 1\}$ is called the \textbf{response space}
+	or \textbf{output space}. We'll make up three $z$'s  and their $t$ function:
+	\begin{itemize}
+		\item $z_1$: A person has sufficient funds at time of loan is due. (Yes/No), so
+		$z_1\in\{0, 1\}$.
+		\item $z_2$: There is an unforeseen emergency (Yes/No), so $z_2\in\{0, 1\}$.
+		\item $z_3$: Criminal intentions (do they intend to pay back?) Also a yes/no, so
+		$z_3\in\{0, 1\}$.
+	\end{itemize}
+	Here's one possible way to specify a functional relationship:
+	\begin{align*}
+		y = t(z_1,z_2,z_3) = z_1(1-z_2)(1-z_3)
+	\end{align*}
+	This is a product of $0$'s and $1$'s, so the output will be $0$ or $1$ as desired.
+	Note $1-z_2$ if there is no unforeseen emergency ($z_2 = 0$), then we expect the
+	person to be able to pay back (so that $1-0=1$).
+	
+	Put aside for a moment whether this is the exact functional relationship. A foremost
+	issue is that it's impossible for a bank to assess any of this information at the time they
+	give out a loan, or years down the line. To put simply, we don't have access to the $z$'s
+	or the $t$ function.
+	\section*{Modeling the Phenomenon}
+	If we cannot use the $z$'s, then what is the next best thing? \emph{We can get other information about
+	the person that approximates the $z$'s}:
+	\begin{itemize}
+		\item \emph{Salary} $(x_1)$: If they are making enough money, they might be able
+		to pay back. We'll say $x_1$ is the annal income now (``today").
+		\item \emph{Previous loan payments} $(x_2)$: Credit score, or did they pay back a
+		previous loan? (Yes/No).
+		\item \emph{Historical criminal record} $(x_3)$: Do they have any misdemeanors, felonies,
+		etc?
+	\end{itemize}
+	It's important to recognize that $x_1$, $x_2$, and $x_3$ do not contain the same information
+	as $z_1$, $z_2$, and $z_3$, but they do approximate the information. Let
+	\begin{align*}
+		\mathbf{x} = \begin{bmatrix}
+			x_1 & x_2 & x_3
+		\end{bmatrix}
+		\in \mathcal{X}
+	\end{align*}
+	be a row vector of dimension $\dim [\mathbf{x}] = p = 3$, where $p$ is the number of
+	\textbf{predictors}. Here is some nomenclature associated with this vector:
+	\begin{itemize}
+		\item $\mathbf{x}$: An observation, record, object, or input.
+		\item $x_i$: A feature, attribute, characteristic, regression, covariate, independent variable,
+		explanatory variable, or predictor.
+		\item $\mathcal{X}$: Input space, or covariate space.
+	\end{itemize}
+	Let's say for this example that:
+	\begin{align*}
+		x_1&\in\mathbb{R},\\
+		x_2&\in\{\text{missed a previous loan}, \text{did not miss a previous loan}\},\\
+		x_3&\in\{\text{none, infraction, misdemeanor, felony}\}.
+	\end{align*}
+	We will encode ``missed a previous loan" as $0$, and ``did not miss a previous loan" as $1$.
+	\section*{Categorical Variables}
+	Though $x_1$ and $x_2$ can be used directly in a numerical computation, that is not so
+	for $x_3$; we need to numerically encode it. $x_3$ is an example of a \textbf{categorical variable}
+	(or \text{factor}) with four \textbf{levels} $(L = 4)$. Note we've chosen the levels in $x_3$ to
+	be mutually exclusive.
+	
+	There are two common strategies to encode categorical variables:
+	\begin{enumerate}[label=(\alph*)]
+		\item We can use the mapping:
+		\begin{align*}
+			0&\mapsto \text{none}\\
+			1&\mapsto \text{infraction}\\
+			2&\mapsto \text{misdemeanor}\\
+			3&\mapsto \text{felony}
+		\end{align*}
+	Then $x_3\in\{0,1,2,3\}$. An implicit assumption here is that there is an \emph{order}
+	of severity. If a categorical variable's levels are ordered, then this makes sense.
+	Another point which can be problematic is that the numerical values are arbitrary, and
+	it may make a difference in your model. The conclusion is that \textbf{ordered factors}
+	(i.e., ordered categorical variables) are difficult.
+	\item Alternatively, we can ``dummify" the levels. We say $x_3$ is made up of
+	$x_{3a}$, $x_{3b}$, $x_{3c}$, and $x_{3d}$:
+	\begin{itemize}
+		\item $x_{3a}\in \{0, 1\}$, where $0$ means \textit{not none} and $1$ means \textit{none}.
+		\item $x_{3b}\in \{0, 1\}$, where $0$ means \textit{no infraction} and $1$ means
+		\textit{an infraction exists}.
+		\item $x_{3c}\in \{0, 1\}$, where $0$ means \textit{no misdemeanor} and $1$ means
+		\textit{a misdemeanor exists}.
+		\item $x_{3d}\in \{0, 1\}$, where $0$ means \textit{no felony}, and $1$ means
+		\textit{a felony exists}.
+	\end{itemize}
+	We've inflated $x_3$ into 4 other variables (one for each level). We do not need all of them,
+	so we can arbitrarily drop any one of them to have a total of $L-1$ remaining levels.
+	The \textbf{dummy} for the variable that we drop is called the \textbf{reference variable}.
+	\end{enumerate}
+	On a related note, a \textbf{nominal categorical variable} has levels that do not have an inherent
+	order of severity. Therefore, it would be inappropriate to code them as $\{1,2,3,\ldots\}$.
+	In this example, $x_3$ is actually an \textbf{ordered category variable}. If $x_3$ were a
+	nominal categorical variable, then we would have no choice but to use (b).
+	
+	\section*{Supervised Learning}
+	Now let's go back to our starting point, and add some more information:
+	\begin{align*}
+		y = t(z_1,z_2, x_3) = f(x_1,\ldots,x_p) + \delta
+	\end{align*}
+	Here, $f$ is the ``best" functional relationship we can get from the inputs. An
+	important point is that we can never hope to have $t(z_1,z_2,z_3)=f(x_1,\ldots,x_p)$, because
+	the partial information of the $x$'s cannot possibly contain all of the real information
+	of the $z$'s. To account for this we introduce $\delta$, which is what we will
+	call \textbf{the error due to ignorance}.
+	
+	Our next issue is that we need to find $f$. As it turns out, we cannot solve for $f$
+	analytically. For example, in a calculus class, you might be asked to find the minimum
+	of a function such as $y=(x-3)^2$, and you might use techniques such as the first and second
+	derivative test to obtain an exact solution. No such technique applies here to find $f$. Instead,
+	we must find an \textbf{empirical solution}, i.e., through data. The concepts
+	``empirical solution", ``learning from historical data", and ``supervised learning"
+	are the main focus of this course.
+	
+	There are three ingredients in supervised learning:
+	\begin{enumerate}[label=(\arabic*)]
+		\item \textbf{Training data/historical data}: We will use the notation
+		$\mathbb{D}=\langle X, \vec{\textbf{y}}\rangle$ for the \textbf{historical data}.
+		Here, $\textbf{y}\in \mathcal{Y}^n$ is an $n$-length vector, and
+		$X$ is a matrix of the form:
+		\begin{align*}
+			X = \begin{bmatrix}
+				\textbf{x}_1\\
+				\textbf{x}_2\\
+				\vdots\\
+				\textbf{x}_n
+			\end{bmatrix}
+		\end{align*}
+		where each $\textbf{x}_j$ is a row vector with $p$ features (an \textit{observed input}).
+		\item \textbf{Hypothesis set}: The next ingredient is some way to reduce the number
+		of ways that the inputs can be combined to produce an output. Ordinarily, there
+		are uncountably many functions that could conceivably be checked. To make it possible
+		for us to move forward, we might hypothesize, for example, that the functional form
+		is linear. We'll use the following notation for our \textbf{candidate set of functions}:
+		\begin{center}
+			$\mathcal{H} = \{$ candidate functions $h$ to approximate optimal function $f$. $\}$
+		\end{center}
+		These are the functions under consideration; this is a choice we make.
+		\item \textbf{The algorithm}: $\mathcal{A}$ is an algorithm that takes $\mathbb{D}$ and
+		$\mathcal{H}$, and selects $g\in \mathcal{H}$. That is,
+		\begin{align*}
+			g= \mathcal{A}(\mathbb{D}, \mathcal{H})\in \mathcal{H}
+		\end{align*}
+		Note that $g$ will be one of the functions in $\mathcal{H}$.
+	\end{enumerate}
+	\section*{Approximations and Errors}
+	Let's update our functional relationship equation:
+	\begin{align*}
+		y = t(z_1,z_2,z_3) &= f(x_1,\ldots,x_p) + \delta\\
+		&= h^*(x_1,\ldots,x_p)+\epsilon\\
+		&= g(x_1,\ldots,x_p) + e
+	\end{align*}
+	The function $h^*$ is known as the \textbf{optimal approximation} to $f$ within $\mathcal{H}$. The
+	approximation $h^*$ to $f$ incurs even more error than what is captured by $\delta$;
+	here that is called $\epsilon$. On the subject of errors, there are three main forms of
+	error:
+	\begin{itemize}
+		\item \textbf{Ignorance error}: $y-f=\delta$. This error occurs because we simply do not
+		know the actual drivers (the $z$'s); the features we use as proxies ($x$'s) cannot possibly
+		contain the same information as the $z$'s. Of course, we also do not know the functional
+		relationship $t$ itself. One way to mitigate ignorance error is by increasing the
+		number of proxies $x_1,\ldots,x_p$ to the $z$'s.
+		\item \textbf{Misspecification error}: $f-h^*$. This occurs because we specified a set
+		of candidate functions $\mathcal{H}$, which may be too small and thus may miss
+		the correct functional form of $f$. One way to get around this is to pick a different
+		functional form, i.e., a different $\mathcal{H}$.
+		\item \textbf{Estimation error}: $h^*-g$. We can get around this by designing $\mathcal{A}$ better.
+	\end{itemize}
+	Note that the algorithm will not necessarily find $h^*$ because the data $\mathbb{D}$
+	is insufficient; it will find $g$. The function $g$ is our fitted model, and now we
+	want to use it for predictions, which we now define:
+	\begin{align*}
+		\hat{y}_i &= g(\textbf{x}_i),\quad e_i = y_i-\hat{y}_i,\quad
+		\hat{y}_* = g(\mathbf{x}_*)
+	\end{align*}
+	Here $\hat{y}_i$ is a \textbf{observed response}, $\hat{y}_*$ is a \textbf{future prediction}, and
+	$\hat{\textbf{x}_*}$ is a \textbf{future observation}. The quantity $e_i$ is called the
+	\textbf{residual error}. Our main reason for doing this is the future predictions from
+	the future observations.
+	
+	\section*{Threshold Model}
+	Back to our loan example. Assume $p = 1$; we only have $x_1=\{\text{salary}\}$.
+	Then the equation
+	\begin{align*}
+		\hat{y}=g(x)
+	\end{align*}
+	is called a \textbf{univariate model}. Here, $x\in \mathbb{R}$
+	and $\mathcal{Y} = \{0, 1\}$. Univariate models tend to be high in ignorance error,
+	but we are using it as a pedagogical tool. Here the inputs represent salaries. An
+	output of $0$ means they did not pay back the loan, and an output of $1$ means they did pay back.
+	One useful abstraction here is the \textbf{indicator function}:
+	\begin{align*}
+		\mathbb{I}_a(x) = \begin{cases}
+			1 & \text{if } x=a\\
+			0 & \text{if not } x\neq a
+		\end{cases}
+	\end{align*}
+	We can start by picking a \textbf{threshold} and use it to make a decision. That is,
+	we'll let our set of candidate functions be:
+	\begin{align*}
+		\mathcal{H} = \{\mathbb{I}_{x\geq \theta}: \theta\in\mathbb{R}\}
+	\end{align*}
+	Here, $\theta$ is called a \textbf{model parameter}, and this model is sometimes known
+	as a \textbf{threshold model}. The candidate function $\mathbf{I}_{x\geq \theta}$ means
+	if the condition $x\geq \theta$ is satisfied, the output is $1$; otherwise, the output
+	is zero.
+	
+	The algorithm $\mathcal{A}$ for the threshold model tries to pick a value for $\theta$. One idea
+	involves letting $\theta$ vary across all unique historical $x$'s. Thus, we fit $n$ different
+	models (one for each $x$ value in the input). Note that there are uncountably-many $x$'s in reality,
+	so we are approximating this with the $n$ observations we have.
+	After, we compute an ``error" for each, measured in the output space. Here are some possibilities:
+	\begin{align*}
+		SAE &:= \sum_{i=1}^{n}|\hat{y}_i-y_i|=\sum_{i=1}^{n}\mathbb{I}_{y_i\neq \hat{y}_i}\\
+		SSE &:= \sum_{i=1}^{n}(y_i-\hat{y}_i)^2
+	\end{align*}
+	$SAE$ stands for \textbf{sum of absolute error}, and $SSE$ stands for \textbf{sum of squared errors}.
+	To compute these values, we apply our model $g=\mathbb{I}_{x\geq \theta}$, for some model
+	parameter $\theta$ that we have determined, to each input observation in $x_1,x_2,\ldots,x_n$
+	in $\mathbb{D}$. Then we compare it against the respective responses $y_1,y_2,\ldots,y_n$
+	in $\mathbb{D}$. Regardless of whether we choose to measure error with $SAE$ or $SSE$,
+	we want the error to be small as possible.
+	\pagebreak
+	\printbibliography
+\end{document}
