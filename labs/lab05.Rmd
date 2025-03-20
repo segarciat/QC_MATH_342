@@ -120,8 +120,7 @@ The OLS solution is given by
 
 $$
 \mathbf{b} = (X^\top X)^{-1} X^\top\mathbf{y}
-$$
-The prediction is given by
+$$ The prediction is given by
 
 $$
 \mathbf{\hat{y}} = X\mathbf{b}
@@ -157,10 +156,7 @@ sqrt(sum(yhat_naive^2)) / sqrt(sum(yhat^2))
 
 Is this ratio expected? Why or why not?
 
-Not the exact value, but the fact that it is above 1. If the columns of $X$ are 
-not already orthogonal, then the orthogonal projection of a vector onto the
-column space of $X$ will not be equal to the sum of the orthogonal projections
-onto the one-dimensional subspaces spanned by each column.
+Not the exact value, but the fact that it is above 1. If the columns of $X$ are not already orthogonal, then the orthogonal projection of a vector onto the column space of $X$ will not be equal to the sum of the orthogonal projections onto the one-dimensional subspaces spanned by each column.
 
 Convert X into V where V has the same column space as X but has orthogonal columns. You can use the function `orthogonal_projection`. This is the Gram-Schmidt orthogonalization algorithm (part A).
 
@@ -207,9 +203,7 @@ expect_equal(as.numeric(Q_from_r), as.numeric(Q))
 
 Is this expected? Why did this happen?
 
-The orthogonal vectors in the QR decomposition are not necessarily unique.
-For example, in an orthogonal list $q_0,q_1,\ldots,q_p$, we can change
-$q_0$ by $q_0' = -q_0$, and the new list will still be orthogonal.
+The orthogonal vectors in the QR decomposition are not necessarily unique. For example, in an orthogonal list $q_0,q_1,\ldots,q_p$, we can change $q_0$ by $q_0' = -q_0$, and the new list will still be orthogonal.
 
 Project the y vector onto each column of the Q matrix and test if the sum of these projections is the same as yhat.
 
@@ -224,12 +218,12 @@ The OLS estimates can be computed with the formula:
 
 $$
 \mathbf{b}_Q = (Q^\top Q)^{-1}Q^\top\mathbf{y}
-$$
-Since $Q$ is an orthonormal matrix, $Q^\top Q=I_{p+1}$, so this reduces to
+$$ Since $Q$ is an orthonormal matrix, $Q^\top Q=I_{p+1}$, so this reduces to
 
 $$
 \mathbf{b}_Q = Q^\top \mathbf{y}
 $$
+
 ```{r}
 b_Q = t(Q) %*% y
 cbind(b, b_Q)
@@ -238,14 +232,7 @@ expect_equal(as.numeric(b), as.numeric(b_Q))
 
 Are b and b_Q the same? Why or why not?
 
-No. $\mathbf{b}$ consists of the coefficients needed to express the projection
-of $\mathbf{y}$ (that is, $\mathbf{\hat{y}}$) as a linear combination of the
-columns of $X$. Similarly, $\mathbf{b}_Q$ consists of the coefficients needed
-to express the $\mathbf{\vec{y}}$ as a linear combination of the columns of $Q$.
-Since the lists are distinct, the coefficients will generally differ. This
-is in spite of the fact that the column space of $X$ and $Q$ is the same,
-and that we are projecting the same vector $\mathbf{y}$ and obtaning the
-same vector for the projection, $\mathbf{\hat{y}}$.
+No. $\mathbf{b}$ consists of the coefficients needed to express the projection of $\mathbf{y}$ (that is, $\mathbf{\hat{y}}$) as a linear combination of the columns of $X$. Similarly, $\mathbf{b}_Q$ consists of the coefficients needed to express the $\mathbf{\vec{y}}$ as a linear combination of the columns of $Q$. Since the lists are distinct, the coefficients will generally differ. This is in spite of the fact that the column space of $X$ and $Q$ is the same, and that we are projecting the same vector $\mathbf{y}$ and obtaning the same vector for the projection, $\mathbf{\hat{y}}$.
 
 Ensure that the predicted values are the same for both linear models: the one created with X as its design matrix and the one created with Q as its design matrix.
 
@@ -277,9 +264,7 @@ rm(j)
 
 Why are the estimates changing from row to row as you add in more predictors?
 
-This occurs because the columns of $X$ are not orthogonal. If we were using
-an orthonormal matrix, $Q$, then the coefficients would not change because in
-that case, the projection of the sums is equal to the sum of the projections.
+This occurs because the columns of $X$ are not orthogonal. If we were using an orthonormal matrix, $Q$, then the coefficients would not change because in that case, the projection of the sums is equal to the sum of the projections.
 
 Create a vector of length p+1 and compute the R\^2 values for each of the above models.
 
@@ -287,10 +272,7 @@ $R^2$ is given by
 
 $$
 R^2 = 1 - \frac{SSE}{SST}
-$$
-Therefore, we need to compute the residuals $\mathbf{e}$ to compute the $SSE$.
-We can do this by using $I-H$, which is the orthogonal projection matrix onto
-the residual space.
+$$ Therefore, we need to compute the residuals $\mathbf{e}$ to compute the $SSE$. We can do this by using $I-H$, which is the orthogonal projection matrix onto the residual space.
 
 ```{r}
 results = array(NA, p_plus_1)
@@ -306,11 +288,7 @@ round(1 - results / SST, 3)
 
 Is R\^2 monotonically increasing? Why?
 
-Yes, because with each iteration, we add an extra column corresponding to a new
-predictor, and the design matrix is closer to filling the entire space.
-The value would not increase if the new predictor were orthogonal to the
-response vector $\mathbf{y}$, but the probability of that occurring is very
-small.
+Yes, because with each iteration, we add an extra column corresponding to a new predictor, and the design matrix is closer to filling the entire space. The value would not increase if the new predictor were orthogonal to the response vector $\mathbf{y}$, but the probability of that occurring is very small.
 
 Create a 2x2 matrix with the first column 1's and the next column iid normal realizations. Find the absolute value of the angle (in degrees, not radians) between the two columns in absolute difference from 90 degrees.
 
@@ -358,9 +336,7 @@ mean_angle_by_trial_size
 
 What is this absolute angle difference from 90 degrees converging to? Why does this make sense?
 
-Note that the arccosine is between $0^\circ$ and $180^\circ$ so on average it
-seems reasonable that the angle between two random vectors falls halfway between
-$0^\circ$ and $180^\circ$, and hence that it should be close to $90^\circ$.
+Note that the arccosine is between $0^\circ$ and $180^\circ$ so on average it seems reasonable that the angle between two random vectors falls halfway between $0^\circ$ and $180^\circ$, and hence that it should be close to $90^\circ$.
 
 Create a vector y by simulating n = 100 standard iid normals. Create a matrix of size 100 x 2 and populate the first column by all ones (for the intercept) and the second column by 100 standard iid normals. Find the R\^2 of an OLS regression of `y ~ X`. Use matrix algebra.
 
@@ -388,9 +364,8 @@ for (j in 1:(n-2)) {
 }
 Rsqs
 ```
-The $R^2$ error metric eventually becomes $1$ because when $X$ becomes a full
-rank $n\times n$ matrix, thus covering the entire space and yielding a perfect
-fit.
+
+The $R^2$ error metric eventually becomes $1$ because when $X$ becomes a full rank $n\times n$ matrix, thus covering the entire space and yielding a perfect fit.
 
 Test that the projection matrix onto this X is the same as I_n. You may have to vectorize the matrices in the `expect_equal` function for the test to work.
 
@@ -412,27 +387,22 @@ Rsq
 
 Why does this make sense?
 
-Since $X$ now has 1 more column than rows overdetermined because it has more
-columns than rows, and hence it is not full rank. Put another way, $X$ now
-corresponds to a linear transformation from a vector from a vector space of
-dimension $101$ to a vector space of dimension $100$, so it is not injective.
-Hence, $X^\top X$ is not injective. This causes the `solve()` function that
-attempts to compute the inverse of $X^\top X$ in the computation of the hat
-matrix $H$ to fail.
+Since $X$ now has 1 more column than rows overdetermined because it has more columns than rows, and hence it is not full rank. Put another way, $X$ now corresponds to a linear transformation from a vector from a vector space of dimension $101$ to a vector space of dimension $100$, so it is not injective. Hence, $X^\top X$ is not injective. This causes the `solve()` function that attempts to compute the inverse of $X^\top X$ in the computation of the hat matrix $H$ to fail.
 
 Split the Boston Housing Data into a training set and a test set where the training set is 80% of the observations. Do so at random.
 
 ```{r}
 set.seed(37)
 n = nrow(MASS::Boston)
+# Last column has the response $medv
+p = ncol(MASS::Boston) - 1
 K = 5
-n_test = round(n * 1 / K)
+n_test = ceiling(n * 1 / K)
 n_train = n - n_test
 idx_train = sample(1:n, size = n_train)
 idx_test = setdiff(1:n, idx_train)
 boston_train = MASS::Boston[idx_train,]
 boston_test = MASS::Boston[idx_test,]
-# We have pulled two chunks; 1/5 train, 4/5 test
 ```
 
 Fit an OLS model. Find the s_e in sample and out of sample. Which one is greater? Note: we are now using s_e and not RMSE since RMSE has the n-(p + 1) in the denominator not n-1 which attempts to de-bias the error estimate by inflating the estimate when overfitting in high p. Again, we're just using `sd(e)`, the sample standard deviation of the residuals.
@@ -450,11 +420,6 @@ Do these two exercises `Nsim = 1000` times and find the average difference betwe
 
 ```{r}
 set.seed(314159)
-K = 5
-n = nrow(MASS::Boston)
-n_test = round(n * 1 / K)
-n_train = n - n_test
-
 Nsim = 1000
 se_in_minus_se_out = array(data = NA, dim = Nsim)
 for (sim_id in 1 : Nsim) {
@@ -476,9 +441,13 @@ On average, `s_e` is lower than `ooss_e`, so the average difference is negative.
 We'll now add random junk to the data so that `p_plus_one = n_train` and create a new data matrix `X_with_junk.`
 
 ```{r}
-X = cbind(1, boston_train[, 1: 13])
-p_plus_one = ncol(X)
-X_with_junk = cbind(X, matrix(rnorm(n_train * (n_train - p_plus_one)), nrow = nrow(X)))
+X = cbind(1, boston_train[, 1: p])
+X_with_junk = cbind(X,
+  matrix(
+    rnorm(n_train * (n_train - (p + 1))),
+    nrow = nrow(X)
+  )
+)
 dim(X)
 dim(X_with_junk)
 ```
@@ -488,6 +457,7 @@ Repeat the exercise above measuring the average s_e and ooss_e but this time rec
 ```{r}
 s_e_by_p = array(data = NA, dim = n_train)
 ooss_e_by_p = array(data = NA, dim = n_train)
+X_test = as.matrix(cbind(1, boston_test[, 1:p]))
 for (j in 1: n_train) {
   # Model using training set, through column j
   mod = lm(boston_train$medv ~ 0 + ., data = X_with_junk[, 1:j, drop=FALSE])
@@ -495,7 +465,9 @@ for (j in 1: n_train) {
   # in-sample error
   s_e_by_p[j] = sd(mod$residuals)
   
-  y_hat = as.matrix(cbind(1, boston_test[, 1:13])) %*% mod$coefficients[1:p_plus_one]
+  # Predict on test set
+  b = mod$coefficients[1:(p+1)]
+  y_hat = X_test %*% b
   
   # out-of-sample error
   ooss_e_by_p[j] = sd(boston_test$medv - y_hat)
@@ -516,39 +488,47 @@ ggplot(
 
 Is this shape expected? Explain.
 
-Yes, because the "random junk" that we added is just fitting the noise;
-it has nothing to do with our features. The in-sample error goes to zero
-because the junk matrix becomes full rank and becomes a perfect fit.
-However, predictions are worse, a demonstrated by the out-of-sample blowing
-up. This is because the least squares estimates for the features that matter
-become worse as we add junk features, and the junk features skew our
-predictions.
+Yes, because the "random junk" that we added is just fitting the noise; it has nothing to do with our features. The in-sample error goes to zero because the junk matrix becomes full rank and becomes a perfect fit. However, predictions are worse, a demonstrated by the out-of-sample blowing up. This is because the least squares estimates for the features that matter become worse as we add junk features, and the junk features skew our predictions.
 
 Now repeat the exercise above except use 5-fold CV (K=5 cross validation) for each p. The code below will also plot the oos RMSE. This oos RMSE curve should be similar to the curve in the above problem, but now it will be more stable.
 
 ```{r}
-K = 5
 ooss_e_by_p_k = matrix(NA, nrow = n, ncol = n) #save all residuals here - each row are the residuals for number of features = j
 
-print(length(MASS::Boston$medv[idx_train]))
-p = p_plus_one - 1
-for (j in (p_plus_one + 1): ncol(X_with_junk)) {
+# Create design matrix, including intercept, predictors that matter, and junk
+X_with_junk = as.matrix(cbind(
+  1,                                           # intercept
+  MASS::Boston[, 1:p],                         # features that matter
+  matrix(rnorm(n * (n - (p + 1))), nrow = n)   # junk
+))
+
+# Perform K-fold CV for each p
+for (j in 1:n) {
+  # Shuffle the data set
+  idx_shuf = sample(1:n, n, replace = FALSE)
+  X = X_with_junk[idx_shuf, ]
+  y = MASS::Boston$medv[idx_shuf]
+  
+  # Perform K-fold CV
   for (k in 1:K) {
+    # Get next portion for training set
     idx_test = seq(from=(k-1) * n_test + 1, to = min(n, k * n_test))
     idx_train = setdiff(1:n, idx_test)
     
-    X_train = X_with_junk[idx_train, 1:j]
-    y_train = MASS::Boston$medv[idx_train]
+    X_train = X[idx_train, 1:j, drop=FALSE]
+    y_train = y[idx_train]
     
-    X_test = X_with_junk[idx_test, 1:p]
-    y_test = MASS::Boston$medv[idx_test]
+    X_test = X[idx_test, 1:min(j, p + 1), drop=FALSE]
+    y_test = y[idx_test]
     
     # Fit linear model with training set
-    mod = lm(y_train ~ 0 + as.matrix(X_train))
+    mod = lm(y_train ~ 0 + X_train)
     
     # Use model to compute predictions on the test set
-    yhat = as.matrix(cbind(1, X_test)) %*% mod$coefficients[1:p_plus_one]
+    b = mod$coefficients[1:min(j, p+1)]
+    yhat = X_test %*% b
     
+    # Keep track of out-of-sample error
     ooss_e_by_p_k[j, idx_test] = y_test - yhat
   }
 }
@@ -566,5 +546,17 @@ ggplot(data.frame(
 Even though the concept of confidence intervals (CIs) will not be on the midterm, construct 95% CIs for each of the oosRMSE measurements by number of features, p. A CI is a real-number interval with a lower bound and upper bound. The formula for the CI is [s_e - 2 \* s_s_e, s_e + 2 \* s_s_e].
 
 ```{r}
-#TODO
+for (j in 1:n) {
+  oosRMSE_k = array(data = NA, dim=K)
+  for (k in 1:K) {
+    idx = seq(from = (k-1) * n_test + 1, to = min(n, k * n_test))
+    e_k = ooss_e_by_p_k[j, idx]
+    oosRMSE_k[k] = sd(e_k)
+  }
+  s_e = mean(oosRMSE_k)
+  s_s_e = sd(oosRMSE_k)
+  radius = 2 * s_s_e / sqrt(K)
+  
+  cat("j=", j, ",\ts_e=", s_e, ",\tinterval radius=", radius, "\n")
+}
 ```
