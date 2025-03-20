@@ -1,0 +1,733 @@
+\documentclass[12pt]{article}
+
+\include{preamble}
+
+\newtoggle{professormode}
+% \toggletrue{professormode} %STUDENTS: DELETE or COMMENT this line
+
+
+
+\title{MATH 342W / 642 / RM 742 Spring \the\year ~HW \#3}
+
+\author{Sergio E. Garcia Tapia} %STUDENTS: write your name here
+
+\iftoggle{professormode}{
+\date{Due noon March 19 \\ \vspace{0.5cm} \small (this document last updated \currenttime~on \today)}
+}
+
+\renewcommand{\abstractname}{Instructions and Philosophy}
+
+\begin{document}
+\maketitle
+
+\iftoggle{professormode}{
+\begin{abstract}
+The path to success in this class is to do many problems. Unlike other courses, exclusively doing reading(s) will not help. Coming to lecture is akin to watching workout videos; thinking about and solving problems on your own is the actual ``working out.''  Feel free to \qu{work out} with others; \textbf{I want you to work on this in groups.}
+
+Reading is still \textit{required}. You should be googling and reading about all the concepts introduced in class online. This is your responsibility to supplement in-class with your own readings.
+
+The problems below are color coded: \ingreen{green} problems are considered \textit{easy} and marked \qu{[easy]}; \inorange{yellow} problems are considered \textit{intermediate} and marked \qu{[harder]}, \inred{red} problems are considered \textit{difficult} and marked \qu{[difficult]} and \inpurple{purple} problems are extra credit. The \textit{easy} problems are intended to be ``giveaways'' if you went to class. Do as much as you can of the others; I expect you to at least attempt the \textit{difficult} problems. 
+
+This homework is worth 100 points but the point distribution will not be determined until after the due date. See syllabus for the policy on late homework.
+
+Up to 7 points are given as a bonus if the homework is typed using \LaTeX. Links to instaling \LaTeX~and program for compiling \LaTeX~is found on the syllabus. You are encouraged to use \url{overleaf.com}. If you are handing in homework this way, read the comments in the code; there are two lines to comment out and you should replace my name with yours and write your section. The easiest way to use overleaf is to copy the raw text from hwxx.tex and preamble.tex into two new overleaf tex files with the same name. If you are asked to make drawings, you can take a picture of your handwritten drawing and insert them as figures or leave space using the \qu{$\backslash$vspace} command and draw them in after printing or attach them stapled.
+
+The document is available with spaces for you to write your answers. If not using \LaTeX, print this document and write in your answers. I do not accept homeworks which are \textit{not} on this printout. Keep this first page printed for your records.
+
+\end{abstract}
+
+\thispagestyle{empty}
+\vspace{1cm}
+NAME: \line(1,0){380}
+\clearpage
+}
+
+\problem{These are questions about Silver's book, chapters 3-6.  For all parts in this question, answer using notation from class (i.e. $t ,f, g, h^*, \delta, \epsilon, e, t, z_1, \ldots, z_t, \mathbb{D}, \mathcal{H}, \mathcal{A}, \mathcal{X}, \mathcal{Y}, X, y, n, p, x_{\cdot 1}, \ldots, x_{\cdot p}$, $x_{1 \cdot}, \ldots, x_{n \cdot}$, etc.} % and also we now have $f_{pr}, h^*_{pr}, g_{pr}, p_{th}$, etc from probabilistic classification as well as different types of validation schemes)
+
+\begin{enumerate}
+
+\hardsubproblem{Chapter 4 is all about predicting weather. Broadly speaking, what is the problem with weather predictions? Make sure you use the framework and notation from class. This is not an easy question.}\spc{6}
+
+One problem is how computationally expensive it is. To predict the weather for
+a relatively large region, the atmosphere is broken down into a grid. A coarse
+grid may not be accurate, but the effect of using a finer grid exponentially increases
+the amount of computation that needs to be done. Put another way, for a large enough
+$n$, the algorithm $\mathcal{A}$ may take a long time to converge.
+
+Another problem is the effect of nonlinearity and dynamic weather conditions,
+subsumed in the notion of chaos theory. The weather phenomenon is
+described by the unknown $t(z_1,z_2,\ldots,z_t)$, and the best we can do
+is decide on a model that assumes a functional form, captured by the hypothesis
+set $\mathcal{H}$. The price we pay to this point is $\epsilon$,
+the noise, which includes both ignorance error and misspecification error.
+The effect of chaos theory is to accentuate this error over time,
+and thus predictions of the conditions far enough in the future (say, a week in
+advance) hardly beat the null model $g_0$.
+
+\easysubproblem{Why does the weatherman lie about the chance of rain? And where should you go if you want honest forecasts?}\spc{2}
+
+Weathermen lie because they are aware that consumers are likelier to notice
+certain kinds of mispredictions. Weather forecasts are probabilistic, communicating
+the likelihood that it might rain, for example, rather than deterministic statements
+about what actually will occur. Put another way, the response space $\mathcal{Y}$
+is $[0, 1]$, which is numeric, to describe likelihood. However, consumers often
+use these forecasts to make deterministic decisions (yes or no to a picnic, for example),
+which for them is the binary response space $\mathcal{Y}=\{0, 1\}$. If
+the weatherman communicates a relatively high percentage of a small chance of
+something inconvenient occurring (such as rain), and it actually occurs,
+consumers may be quick to criticize weathermen and lose trust in their forecasts.
+This is the reason for the ``wet bias" that Silver describes. In the context
+of our framework, thus amounts to choosing an algorithm $\mathcal{A}$ that weighs
+certain features $x_{\cdot, k}$ heavier than others, particularly those
+associated with the chance of precipitation. Therefore,
+the forecasts made by weathermen often fail in the account of the ``honesty"
+measure of predictions as described by Allan Murphy; they are intentionally
+not making the best forecast they can because of political reasons.
+
+Instead of relying on weathermen, to obtain honest forecasts, it's best to go to the
+National Weather Service, as well as the Hurricane Center. These organizations
+strive for more quality (accuracy) and consistency (honesty).
+
+
+\hardsubproblem{Chapter 5 is all about predicting earthquakes. Broadly speaking, what is the problem with earthquake predictions? It is \textit{not} the same as the problem of predicting weather. Read page 162 a few times. Make sure you use the framework and notation from class.}\spc{5}
+
+To create a model that we can use to predict a phenomenon, we need real data.
+In our framework, that corresponds to the true drivers $z_1,\ldots,z_t$ and
+the response $y$. Since we cannot hope to know the true drivers, we use
+proxies $x_1,\ldots,x_p$. However, we need to be able to measure the predictors
+$x_1,\ldots,x_p$ and their corresponding response $y$. In the case of
+earthquake predictions, there is no way to measure the predictors, such
+as the so-called ``stress". Even if seismologists believe such features
+hold predictive power, they cannot verify it without measurement, and
+therefore they cannot justify making accurate predictions using them.
+
+\easysubproblem{Silver has quite a whimsical explanation of overfitting on page 163 but it is really educational! What is the nonsense predictor in the model he describes?}\spc{2}
+
+The ``nonsense predictor" is the color, call it $x_1$, of the combination lock. Surely the
+color of the lock has little or nothing to do with how to pick it. That is,
+$x_1$ is not a good proxy to the true drivers $z_1,\ldots,z_t$, and it
+will be unable to reliable predict $\hat{y}_*$.
+
+
+\easysubproblem{John von Neumann was credited with saying that \qu{with four parameters I can fit an elephant and with five I can make him wiggle his trunk}. What did he mean by that and what is the message to you, the budding data scientist? }\spc{5}
+
+He meant that you can fit any curve you want to a data set, and manipulate the curve
+at will to make it appear valid. However, in doing so we are deluding ourselves and
+being dishonest, since we artificially increase $p$, $SSR$, and $R^2$ (and decrease $SSE$).
+This insight reminds us as data scientists to not get carried away and become vulnerable
+to overfitting, blindly matching a curve to fit the noise in the data, lest our resulting
+model will be garbage.
+
+\hardsubproblem{Chapter 6 is all about predicting unemployment, an index of macroeconomic performance of a country. Broadly speaking, what is the problem with unemployment predictions? It is \textit{not} the same as the problem of predicting weather or earthquakes. Make sure you use the framework and notation from class.}\spc{6}
+
+According to Hatzius, as discussed on page 185, the fundamental challenges are:
+first it is hard to determine the cause and effect from economic statistics alone,
+second the economy is always changing, and third the data available to economists
+is very noisy.
+
+The predictors (indicators) for weather, the $x_1,\ldots,x_p$,
+can be measured, and since they are well-understood scientifically, they continue
+to be good indicators over time. Meanwhile, the indicators used to predict earthquakes
+cannot be measured. For the economy, an indicator that may be valid at one point
+in time may no longer be valid at a different point in time. In other words,
+we cannot claim that $x_1,\ldots,x_p$ is a good set of indicators, and then
+expect that they will continue to be, as for the weather; the set and number of
+the change over time. Using the language from today's class, the functions $t$, $f$,
+and $h^*$ are not stationary.
+
+The other problem is that the relationship between the economic variables changes
+over time.
+
+\extracreditsubproblem{Many times in this chapter Silver says something on the order of \qu{you need to have theories about how things function in order to make good predictions.} Do you agree? Discuss.}\spc{13}
+
+
+\end{enumerate}
+
+
+
+\problem{These are questions related to the concept of orthogonal projection, QR decomposition and its relationship with least squares linear modeling.}
+
+\begin{enumerate}
+
+\easysubproblem{Let $\H$ be the orthogonal projection onto $\colsp{\X}$ where $\X$ is a $n \times (p+1)$ matrix with all columns linearly independent from each other. What is $\rank{\H}$?}\spc{0.5}
+
+$\rank{\H}=p+1$. I will omit the proof because it is not requested,
+but here is the idea of the argument. We assume that $p + 1 \leq n$,
+and since $\X$ has linearly independent columns, $\rank{\X}=p+1$.
+We can then show that  $\rank{\X}=\rank{\X^\top \X}$. Further, since
+$\H=\X(\X^\top \X)^{-1}\X$, we can show that
+$\text{nullspace}[\X^\top\X] = \text{nullspace}[\H]$. Finally, using the fundamental
+theorem of linear maps (also known as the rank-nullity theorem), we can conclude
+that $\rank{\H} = \rank{\X^\top \X}=\rank{\X} = p + 1$.
+
+
+\easysubproblem{Simplify $\H\X$ by substituting for $\H$.}\spc{0.5}
+
+We have shown that $\H=\X(\X^\top\X)^{-1}\X^\top$. Therefore,
+\begin{align*}
+	\H\X &= (\X(\X^\top \X)^{-1}\X^\top)\X\\
+	&=\X\underbrace{[(\X^\top \X)^{-1}(\X^\top \X)]}_{\I_{p+1}}
+	\tag{by Associativity of Matrix Multiplication}\\
+	&=\X \I_{p+1}\\
+	&=\X
+\end{align*}
+
+\intermediatesubproblem{What does your answer from the previous question mean conceptually?}\spc{2}
+
+When the columns of $\X$ are projected onto the column space of $\X$, they remain
+unchanged. Put another way, the orthogonal projection matrix $\H$ is the identity
+when restricted to the column space of $\X$. Thus if $\x_{\cdot j}$ is the $j$th column
+of $\X$, we have
+\begin{align*}
+	\H\x_{\cdot j}=\x_{\cdot j},\quad \forall_{0\leq j\leq p}
+\end{align*}
+Yet another interpretation is that the
+columns of $\X$ are eigenvectors of $\H$, all corresponding to eigenvalue $\lambda=1$.
+
+\hardsubproblem{Let $\X'$ be the matrix of $\X$ whose columns are in reverse order meaning that $\X = [ \onevec_n~\vdots~\x_{\cdot 1}~\vdots~ \ldots~\vdots~ \x_{\cdot p} ]$ and $\X' = [\x_{\cdot p}~\vdots~ \ldots~\vdots~\x_{\cdot 1}~\vdots~\onevec_n]$. Show that the projection matrix that projects onto $\colsp{X}$ is the same exact projection matrix that projects onto $\colsp{X'}$.}\spc{5}
+
+\begin{proof}
+	
+Let $\H$ be the orthogonal projection onto $\colsp{\X}$, and
+let $\X'$ be the orthogonal projection onto $\colsp{\X'}$. By parts 2(b) and 2(c),
+we know $\H\X=\X$ and $\H'\X'=\X'$, and hence $\H\x_{\cdot, j}=\x_{\cdot j}$
+and $\H'\x'_{\cdot j}=\x'_{\cdot j}$, where $\x_{\cdot j}$ is the $j$th column
+of $\X$ and $\x'_{\cdot j}$ is the $j$th column of $\X'$. Since the set of columns
+of $\X$ and $\X'$ is the same (indeed, the list is merely written in reverse order),
+we have
+
+\begin{align*}
+	\H\x_{\cdot j}=\x_{\cdot j}=\H'\x_{\cdot j},\quad \forall_{0\leq j\leq p}
+\end{align*}
+
+and hence
+
+\begin{align*}
+	\H\X = \X = \H'\X	
+\end{align*}
+
+Note $\colsp{\X}=\colsp{\X'}$ because $\X$ and $\X'$ have the same set of columns,
+albeit in different order. Let $U:=\colsp{\X}=\colsp{\X'}$. Then $U^\top$ is the orthogonal
+complement of $U$, and it has dimension $n-(p+1)$ since
+\begin{align*}
+	\R^n = U \oplus U^\top
+\end{align*}
+where $\oplus$ denotes a direct sum of vector spaces. Let
+$\x_{\cdot 1,\perp}\ldots,\x_{\cdot n-(p+1),\perp}$ be a basis for $U^\perp$. Since
+$\H$ and $\H'$ are orthogonal projections onto $U$, it follows
+that
+\begin{align*}
+	\H\x_{\cdot k,\perp}=\mathbf{0}_{n}=\H'\x_{\cdot k,\perp},\quad \forall_{(p+1)\leq k\leq n}
+\end{align*}
+Since the vectors in the list $\x_{\cdot 1,\perp}\ldots,\x_{\cdot n-(p+1),\perp}$
+is orthogonal to the linearly independent list $\x_{\cdot 0},\x_{\cdot 1},\ldots,\x_{\cdot p}$,
+altogether they make up a basis of $\R^n$. At this, we have concluded that $\H$
+and $\H'$ map a basis of $\R^n$ in precisely the same way, so this is sufficient
+to conclude that $\H=\H'$. However, we can be more expicit.
+Let's extend $\X$ to $n\times n$ matrix $\X_{\text{full}}$ by appending the
+basis vectors of $U^\perp$:
+
+\begin{align*}
+	\X_{\text{full}}
+	&=\begin{bmatrix}
+		\uparrow & \uparrow & \cdots & \uparrow & \uparrow & \cdots & \uparrow\\
+		\onevec_n  &\x_{\cdot 1} & \cdots & \x_{\cdot p}
+		& \x_{\cdot 1,\perp} & \cdots & \x_{\cdot n-(p+1),\perp}\\
+		\downarrow & \downarrow & \cdots & \downarrow & \downarrow & \cdots & \downarrow\\
+	\end{bmatrix}
+\end{align*}
+
+
+Thus,
+\begin{align*}
+	\H\X_{\text{full}}
+	&=[\H\X \mid \H\mathbf{0}_{n\times (n-(p+1))}]\\
+	&=[\H'\X \mid \H'\mathbf{0}_{n\times (n-(p+1))}]\\
+	&=\H'\X_{\text{full}}
+\end{align*}
+
+Since the columns of $\X_{\text{full}}$ form a basis of $\R^n$, the
+matrix $\X_{\text{full}}$ is invertible. Multiplying by its inverse, we arrive at
+\begin{align*}
+	\H\X_{\text{full}}&=\H'\X_{\text{full}}\\
+	\H\X_{\text{full}}(\X_{\text{full}})^{-1}&=\H'\X_{\text{full}}(\X_{\text{full}})^{-1}\\
+	\H\I_n&=\H'\I_{n}\\
+	\H&=\H'
+\end{align*}
+	
+\end{proof}
+
+\easysubproblem{Generalize the previous problem by proving that orthogonal projection matrices that project onto any specific subspace are \emph{unique}.}\spc{3}
+
+\begin{proof}
+	Suppose that $V$ is a finite-dimensional vector space, and $U$ is a subspace
+	of $V$. Let $\mathbf{u}_1,\ldots,\mathbf{u}_n$ be a basis for $U$,
+	and let $\mathbf{u}_{1,\perp},\ldots,\mathbf{u}_{m,\perp}$ be a basis of
+	$U^\perp$. If $P$ and $P'$ are both orthogonal projections onto $U$,
+	then $P\mathbf{u}_j=\mathbf{u}_j=P'\mathbf{u}_j$ for all $1\leq j\leq n$, and
+	$P\mathbf{u}_{k,\perp}=\mathbf{0}_n=P'\mathbf{u}_{k,\perp}$ for all $1\leq k\leq m$.
+
+	Let $A$ be a matrix whose columns consists of the vectors that are
+	a basis of $U$ followed by the vectors that are a basis of $U^\perp$:
+	
+	\begin{align*}
+		A = \begin{bmatrix}
+			\uparrow & \cdots & \uparrow & \uparrow & \cdots& \uparrow\\
+			\mathbf{u}_1 & \cdots & \mathbf{u}_n & \mathbf{u}_{1,\perp} & \cdots & \mathbf{u}_{m, \perp}\\
+			\downarrow & \cdots & \downarrow& \downarrow& \cdots& \downarrow
+		\end{bmatrix}
+	\end{align*}
+	
+	Then $A$ is invertible because its columns form a basis for $V$, given that
+	we can decompose $V$ as a direct sum $V=U\oplus U$. Then
+	
+	\begin{align*}
+		PA
+		&=P\begin{bmatrix}
+			\uparrow & \cdots & \uparrow & \uparrow & \cdots& \uparrow\\
+			\mathbf{u}_1 & \cdots & \mathbf{u}_n & \mathbf{u}_{1,\perp} & \cdots & \mathbf{u}_{m, \perp}\\
+			\downarrow & \cdots & \downarrow& \downarrow& \cdots& \downarrow
+		\end{bmatrix}\\
+		&=\begin{bmatrix}
+			\uparrow & \cdots & \uparrow & \uparrow & \cdots& \uparrow\\
+			P\mathbf{u}_1 & \cdots & P\mathbf{u}_n & P\mathbf{u}_{1,\perp} & \cdots & P\mathbf{u}_{m, \perp}\\
+			\downarrow & \cdots & \downarrow& \downarrow& \cdots& \downarrow
+		\end{bmatrix}\\
+		&=\begin{bmatrix}
+			\uparrow & \cdots & \uparrow & \uparrow & \cdots& \uparrow\\
+			P'\mathbf{u}_1 & \cdots & P'\mathbf{u}_n & P'\mathbf{u}_{1,\perp} & \cdots & P'\mathbf{u}_{m, \perp}\\
+			\downarrow & \cdots & \downarrow& \downarrow& \cdots& \downarrow
+		\end{bmatrix}\\
+		&=P'A
+	\end{align*}
+	
+	Since $A$ is invertible, we have
+	\begin{align*}
+		P&=PI=P(AA^{-1})=(PA)A^{-1}=(P'A)A^{-1}=P'(AA^{-1})=P'I=P'
+	\end{align*}
+	where $I$ is the identity matrix on $V$. Hence, $P=P'$.
+\end{proof}
+
+\easysubproblem{Prove that if a square matrix is both symmetric and idempotent then it must be an orthogonal projection matrix.}\spc{3}
+
+\begin{proof}
+	Suppose that $P$ is an $n\times n$ matrix that is both symmetric $(P=P^\top$)
+	and idempotent ($P^2=P$). Let $\mathbf{u},\mathbf{v}$ belong to $\mathbb{R}^n$.
+	Then
+	
+	\begin{align*}
+		(\mathbf{u}-P\mathbf{u})^\top (P\mathbf{v})
+		&=(\mathbf{u}^\top - (P\mathbf{u})^\top)(P\mathbf{v})\\
+		&=(\mathbf{u}^\top -\mathbf{u}^\top P^\top)(P\mathbf{v})\\
+		&=\mathbf{u}^\top P\mathbf{v}-\mathbf{u}^\top P^\top P\mathbf{v}\\
+		&=\mathbf{u}^\top P\mathbf{v} - \mathbf{u}^\top P\cdot P\mathbf{v}
+		\tag{Symmetry: $P=P^\top$}\\
+		&=\mathbf{u}^\top P\mathbf{v}-\mathbf{u}^\top P\mathbf{v}
+		\tag{Idempotency: $P^2=P$}\\
+		&=0
+	\end{align*}
+	
+	Therefore, $P$ is an orthogonal projection matrix.
+\end{proof}
+
+\hardsubproblem{[MA] Prove the converse of the previous question: that if a square matrix is an orthogonal projection matrix, then it must be both symmetric and idempotent.}\spc{4}
+
+\begin{proof}
+	Suppose $P$ an $n\times n$ orthogonal projection matrix. Let $\mathbf{v}\in\mathbb{R}^n$,
+	and define
+	
+	\begin{align*}
+		\mathbf{u} := P^\top\mathbf{v}-P\mathbf{v}
+	\end{align*}
+	
+	If $\mathbf{w}\in\mathbb{R}^n$, then
+	
+	\begin{align*}
+		\mathbf{w}^\top \mathbf{u}
+		&= \mathbf{w}^\top P^\top\mathbf{v}-\mathbf{w}^\top P\mathbf{v}
+	\end{align*}
+	
+	Since $P$ is an orthogonal projection matrix, it follows that
+	
+	\begin{align*}
+		0 &= (\mathbf{w} - P\mathbf{w})^\top(P\mathbf{v})\\
+		&=\mathbf{w}^\top P\mathbf{v} - \mathbf{w}^\top P^\top P\mathbf{v}
+	\end{align*}
+	=
+	Now we have
+	
+	\begin{align*}
+		\mathbf{w}^\top \mathbf{u}
+		&= \mathbf{w}^\top P^\top\mathbf{v} - \mathbf{w}^\top P^\top P\mathbf{v}\\
+		&=\mathbf{w}^\top P^\top(\mathbf{v} - P \mathbf{v})\\
+		&=(P\mathbf{w})^\top(\mathbf{v}-P\mathbf{v})\\
+		&=0
+		\tag{since $P$ is an orthogonal projection matrix}
+	\end{align*}
+	
+	
+	Since $\mathbf{w}$ is arbitrary, this means $\mathbf{u}$ is orthogonal
+	to every vector in $\mathbb{R}^n$, and hence it must be the zero vector.
+	Now
+	
+	\begin{align*}
+		\mathbf{0}_n=P^\top \mathbf{v}-P\mathbf{v} \quad\implies\quad P^\top \mathbf{v}=P\mathbf{v}
+	\end{align*}
+	
+	Since $\mathbf{v}$ is also arbitrary, this implies $P^\top=P$, so $P$ is idempotent.
+	Using a similar argument, we can show that it is symmetric. Let $\mathbf{v}\in\mathbb{R}^n$,
+	and define
+	
+	\begin{align*}
+		\mathbf{a}:=P^2\mathbf{v} - P\mathbf{v}
+	\end{align*}
+	
+	Given any vector $\mathbf{b}\in\mathbb{R}^n$, we get
+	
+	\begin{align*}
+		\mathbf{b}^\top \mathbf{a}&=b^\top P^2\mathbf{v} - b^\top P\mathbf{v}\\
+		&=b^\top P\cdot P\mathbf{v}-b^\top P\mathbf{v}\\
+		&=b^\top P^\top P \mathbf{v} - b^\top P^\top \mathbf{v}
+		\tag{Symmetry: $P=P^\top$}\\
+		&=b^\top P^\top(P\mathbf{v}-\mathbf{v})\\
+		&=(P\mathbf{b})^\top(P\mathbf{v} - \mathbf{v})\\
+		&=0\tag{since $P$ is an orthogonal projection matrix}
+	\end{align*}
+	
+	Since $\mathbf{b}$ is arbitrary, this means $\mathbf{a}$ is orthogonal to
+	every vector in $\mathbf{R}^n$, and hence $\mathbf{a}$ is the zero vector.
+	Thus $P^2\mathbf{v}=P\mathbf{v}$ for arbitrary $\mathbf{v}$, and hence,
+	$P^2=P$.
+	
+\end{proof}
+
+\easysubproblem{Prove that $I_n$ is an orthogonal projection matrix $\forall n$.}\spc{3}
+
+\begin{proof}
+	Given any $\mathbf{u}$ and $\mathbf{v}$ in $\mathbb{R}^n$,
+	\begin{align*}
+		(\mathbf{u} -I\mathbf{u})^\top(I\mathbf{v})=(\mathbf{u}-\mathbf{u})^\top(I\mathbf{v})
+		=\mathbf{0}^\top(\mathbf{v})=0
+	\end{align*}
+	
+	Alternatively, note that $I^\top=I$ and $I^2=I$, so by part (f),
+	we see $I$ is an orthogonal projection matrix.
+\end{proof}
+
+
+\easysubproblem{What subspace does $I_n$ project onto?}\spc{3}
+
+$\mathbb{R}^n$. Let $U$ be the vector space that $\I_n$ is an orthogonal projection
+for. Let $\texttt{w}\in U^\perp$, where $U^\perp$ is the orthogonal complement
+of $U$. Then $\I_n w=0$. Therefore $U^\perp\subseteq \{0\}$. Since $U^\perp$ is
+a vector space, it cannot be empty, so $U^\perp=\{0\}$. Since $U^\perp$ is a subspace
+of $\R^n$, which is a finite-dimensional vector space, it follows that
+\begin{align*}
+	U = (U^\perp)^\perp = \{\mathbf{0}_n\}^\perp = \R^n
+\end{align*}
+
+The last equality follows because every vector in $\R^n$ is orthogonal to the zero
+vector $\mathbf{0}_n$.
+
+\easysubproblem{Consider least squares linear regression using a design matrix $X$ with rank $p + 1$. What are the degrees of freedom in the resulting model? What does this mean?}\spc{3}
+
+The number of degrees of freedom is $p+1$. The degrees of freedom correspond to
+the $p$ independent features together with the bias (intercept) term.
+
+
+%\easysubproblem{If you are orthogonally projecting the vector $\y$ onto the column space of $X$ which is of rank $p + 1$, derive the formula for $\proj{\colsp{X}}{\y}$. Is this the same as in OLS?}\spc{8}
+
+\hardsubproblem{We saw that the perceptron is an \textit{iterative algorithm}. This means that it goes through multiple iterations in order to converge to a closer and closer $\bv{w}$. Why not do the same with linear least squares regression? Consider the following. Regress $\y$ using $\X$ to get $\yhat$. This generates residuals $\e$ (the leftover piece of $\y$ that wasn't explained by the regression's fit, $\yhat$). Now try again! Regress $\e$ using $\X$ and then get new residuals $\e_{new}$. Would $\e_{new}$ be closer to $\bv{0}_n$ than the first $\e$? That is, wouldn't this yield a better model on iteration \#2? Yes/no and explain.}\spc{8}
+
+The first time we apply regression, the least square estimates are given by
+
+\begin{align*}
+	\b=(\X^\top \X)^{-1}\X^\top\y
+\end{align*}
+
+The prediction is $\yhat = \X \b$, and the residual is $\e := \yhat-\y$.
+Next, we compute $\b_{new}$ by regressing on $\e$:
+
+\begin{align*}
+	\b_{new} &= \X \e\\
+	&=(\X^\top \X)^{-1}\X^\top(\y-\yhat)\\
+	&=(\X^\top \X)^{-1}\X^\top(\y - \X \b)\\
+	&=(\X^\top \X)^{-1}\X^\top \y - \underbrace{(\X^\top \X)^{-1}\X^\top \X}_{\I_{p+1}} \b\\
+	&=\b-\I_{p+1}\b\\
+	&=\mathbf{0}_{p+1}
+\end{align*}
+
+Thus, $\yhat_{new}=\X\b_{new}=\X\mathbf{0}_{p+1}=\mathbf{0}_n$, and
+$\e_{new}=\y-\yhat_{new}=\y$, which is not closer to $\mathbf{0}_n$ at all.
+
+
+\intermediatesubproblem{Prove that $\Q^\top = \Q^{-1}$ where $\Q$ is an orthonormal matrix such that $\colsp{\Q} = \colsp{\X}$ and $\Q$ and $\X$ are both matrices $\in \reals^{n \times (p+1)}$ and $n = p+1$ in this case to ensure the inverse is defined. Hint: this is purely a linear algebra exercise and it's a one-liner.}\spc{2}
+
+\begin{proof}
+	Let $\mathbf{q}_1,\ldots,\mathbf{q}_n$ be the columns of $\Q$, which form
+	an orthonormal basis of $\mathbb{R}^n$. Then the $i$th row of
+	$\Q^\top$ is precisely $\mathbf{q}_i^\top$, and
+	\begin{align*}
+		(\Q^\top \Q)_{ij}
+		=\sum_{k=1}^{n}(\mathbf{q}_i^\top)_k (\mathbf{q}_j)_k
+		=\mathbf{q}_i^\top \mathbf{q}_j=\begin{bmatrix}
+			1 & \text{if }i = j\\
+			0 & \text{otherwise}.
+		\end{bmatrix}
+	\end{align*}
+	Hence $\Q^\top \Q = I_{p+1}$, so $\Q^\top=\Q^{-1}$.
+\end{proof}
+
+
+\easysubproblem{Prove that the least squares projection $\H = \XXtXinvXt = \Q\Q^\top$. Justify each step.}\spc{4}
+
+Let $\X=\Q\R$ be a $QR$-decomposition of $\X$. Here, $\Q$ is an orthonormal matrix
+whose columns span exactly the same subspace as the columns of $\X$, and $\R$ is a square
+upper-triangle matrix. We further assume that $\X$ is full rank, so $\R$ is also full rank
+and hence invertible, as well as $\R^\top$. Now
+\begin{align*}
+	H&=\X(\X^\top \X)^{-1}\X^\top\\
+	&=(\Q\R)((\Q\R)^\top \Q\R)^{-1}(\Q\R)^\top\\
+	&=\Q\R(\R^\top \Q^\top \Q \R)^{-1}\R^\top \Q^\top
+	\tag{since $(AB)^\top=B^\top A^\top$}\\
+	&=\Q\R(\R^\top \R)^{-1}\R^\top \Q^\top
+	\tag{since $\Q^\top=\Q^{-1}$}\\
+	&=\Q\underbrace{\R\R^{-1}}_{\I_{p+1}}\underbrace{(\R^\top)^{-1}\R^\top}_{\I_{p+1}} \Q^\top
+	\tag{since $(AB)^{-1}=B^{-1} A^{-1}$}\\
+	&=\Q \Q^\top
+\end{align*}
+
+
+\hardsubproblem{[MA] This problem is independent of the others. Let $H$ be an orthogonal projection matrix. Prove that $\rank{\H} =\tr{\H}$. Hint: you will need to use facts about eigenvalues and the eigendecomposition of projection matrices.}\spc{8}
+
+\intermediatesubproblem{Prove that an orthogonal projection onto the $\colsp{\Q}$ is the same as the sum of the projections onto each column of $\Q$.}\spc{7}
+
+\begin{proof}
+	The orthogonal projection matrix onto the column space of $\Q$ is computed by
+	\begin{align*}
+		\H =\Q(\Q^\top \Q)^{-1}\Q^\top=\Q(\I_{p+1})^{-1}\Q^\top=\Q \Q^\top
+	\end{align*}
+	Suppose $\Q$ is $n\times (p+1)$.
+	Let $\mathbf{q}_1,\ldots,\mathbf{q}_{p+1}$ be the columns of $\Q$, which form
+	an orthonormal list. Also, let
+	\begin{align*}
+		\mathbf{q}_j:=\begin{bmatrix}
+			q_{1,j}\\
+			\vdots\\
+			q_{n,j}
+		\end{bmatrix}
+	\end{align*}
+	Then the projection matrix onto the $j$th column of $\Q$ is given by
+	\begin{align*}
+		\mathbf{q}_j\mathbf{q}_j^\top&=
+		\mathbf{q}_j
+		\begin{bmatrix}
+			q_{1,j} & \cdots & q_{n,j}
+		\end{bmatrix}\\
+		&=\begin{bmatrix}
+			q_{1,j}\mathbf{q}_j & \cdots & q_{n, j}\mathbf{q}_j
+		\end{bmatrix}
+	\end{align*}
+	Note that for $1\leq i\leq n$, column $i$ of $\Q^\top$ is given by
+	row $i$ of $\Q$, and hence is given by
+	\begin{align*}
+		\Q^T_{\cdot i}:=\begin{bmatrix}
+			q_{i, 1}\\
+			\vdots\\
+			q_{i,p+1}
+		\end{bmatrix}
+	\end{align*}
+	Now if we sum the projections we get
+	\begin{align*}
+		\sum_{j=1}^{p+1}\mathbf{q}_j\mathbf{q}_j^\top
+		&=\sum_{k=1}^{p+1}\begin{bmatrix}
+			q_{1,j}\mathbf{q}_j & \cdots & q_{n, j}\mathbf{q}_j
+		\end{bmatrix}\\
+		&=\begin{bmatrix}
+			\sum_{j=1}^{p+1}q_{1,j}\mathbf{q}_j & \cdots & \sum_{j=1}^{p+1}q_{n,j}\mathbf{q}_j
+		\end{bmatrix}\\
+		&=\begin{bmatrix}
+			\Q \begin{bmatrix}
+				q_{1,1}\\
+				\vdots\\
+				q_{1,p+1}
+			\end{bmatrix}
+			& \cdots&
+			\Q \begin{bmatrix}
+				q_{n,1}\\
+				\vdots\\
+				q_{n,p+1}
+			\end{bmatrix}
+		\end{bmatrix}\\
+		&=\begin{bmatrix}
+			\Q \Q^\top_{\cdot 1} & \cdots & \Q \Q^\top_{\cdot p+1}\\
+		\end{bmatrix}\\
+		&=\Q \begin{bmatrix}
+			\Q^\top_{\cdot 1} & \cdots & \Q^\top_{\cdot p+1}
+		\end{bmatrix}\\
+		&=\Q \Q^\top
+	\end{align*}
+\end{proof}
+
+\easysubproblem{Explain why adding a new column to $\X$ results in no change to SST.}\spc{2}
+
+The SST is the SSE of the null model, and the null model does not take into account
+any of the features; it only looks at the responses. Adding more columns to $\X$ amounts
+to adding more features (increasing $p$) and not changing the responses otherwise
+($n$ remains fixed). Put another way, the $SST$ is given by
+
+\begin{align*}
+	SST = \sum_{i=1}^{n}(y_i-\bar{y})^2.
+\end{align*}
+
+Since adding new columns does not add any responses, we still have the same
+list of $y_i$ values, and hence the $SST$ stays the same.
+
+\intermediatesubproblem{Prove that adding a new column to $\X$ results in SSR increasing.}\spc{4}
+
+Recall SSR is defined by
+\begin{align*}
+	SSR
+	&:= \sum_{i=1}^{n}(\hat{y}_i-\bar{y})^2\\
+	&=\|\yhat-\bar{y}\mathbf{1}_n\|^2
+\end{align*}
+
+Suppose $\X$ has $p+1$ columns. Let $\X=\Q\R$ be the QR-decomposition of $\X$,
+and let $\b_Q$ be the least squares estimate obtained by projecting onto the
+column space of $\Q$ (which is exactly the column space of $\X$). We can
+assume that $\mathbf{q}_0$, the first column of $\Q$, is a scalar multiple of
+$\mathbf{1}_n$, the first column of $\X$. This is reasonable because we can obtain
+$\Q$ by applying Gram Schmidt to $\X$, and since the first column of $\X$ is
+$\mathbf{1}_n$, it follows that $\mathbf{q}_0=\mathbf{1}_n/\|\mathbf{1}_n\|$.
+Then $\yhat=\Q b_Q$. Since $\H=\Q\Q^\top$, we have
+
+\begin{align*}
+	SSR &:= \|\yhat - \bar{y} \mathbf{1}_n\|^2\\
+	&=\|\H\y-\bar{y}\mathbf{1}_n\|^2\\
+	&=\|\Q \Q^\top\y-\bar{y}\mathbf{1}_n\|^2\\
+	&=\left\|\sum_{j=0}^{p}(\mathbf{q}_j^\top \y)\mathbf{q}_j-\bar{y}\mathbf{1}_n\right\|^2\\
+	&=\left\|(\mathbf{q}_0^\top \y)\mathbf{q}_0-\bar{y}\mathbf{1}_n)
+	+\sum_{j=1}^{p}(\mathbf{q}_j^\top \y)\mathbf{q}_j\right\|^2\\
+	&=\left\|\frac{\mathbf{1}_n^\top \y}{\|\mathbf{1}_n\|}\frac{\mathbf{1}_n}{\|\mathbf{1}_n\|}
+	-\bar{y}\mathbf{1}_n\right\|^2
+	+\sum_{j=1}^{p}\|(\mathbf{q}_j^\top \y)\mathbf{q}_j\|^2
+	\tag{by orthogonality}\\
+	&=\left\|\underbrace{\frac{n\bar{y}}{\sqrt{n}}\frac{\mathbf{1}_n}{\sqrt{n}}
+	-\bar{y}\mathbf{1}_n}_{\mathbf{0}_n}\right\|^2
+	+\sum_{j=1}^{p}|(\mathbf{q}_j^\top \y)|^2 \|\mathbf{q}_j\|^2\\
+	&=\sum_{j=1}^{p}|(\mathbf{q}_j^\top \y)|^2
+	\tag{since $\|\mathbf{q}_j\|=1$}
+\end{align*}
+
+If we add another column $\x_{\cdot p+1}$ to $\X$, this entails adding another column
+$\mathbf{q}_{p+1}$ to $\Q$. Therefore, the $SSR$ changes to
+
+\begin{align*}
+	SSR_{\text{new}}
+	&=\sum_{j=1}^{p+1}|(\mathbf{q}_j^\top \y)|^2\\
+	&=SSR+|(\mathbf{q}_{p+1}^\top \y)|^2
+\end{align*}
+
+Thus the $SSR$ increases by $|(\mathbf{q}_{p+1}^\top \y)|^2$ (since this quantity
+is non-negative).
+
+\intermediatesubproblem{What is overfitting? Use what you learned in this problem to frame your answer.}\spc{2}
+
+Overfitting occurs when we use a large number of features, close to $n$, thereby
+superficially increasing the $SSR$ associated with our predictions. Put another
+way, our model ends up fitting the noise in our data, thereby making the model worse.
+
+\easysubproblem{Why are the \qu{in-sample} error metrics $R^2$ and SSE dishonest? Note: I'm leaving out MSE and RMSE as they attempt to be honest by increasing as $p$ increases due to the denominator.}\spc{3}
+
+Because we can easily add random data to our design matrix, pretend that they are new
+features, thereby eventually morphing $\X$ into an $n\times n$ matrix of full rank.
+In the process, the ``features" we have added have nothing to do with the true drivers
+(the $z$'s) of the phenomenon we are modeling. Yet, since $\X$ is full rank, the
+$SSE$ goes to zero and $R^2$ becomes $1$. We get a perfect fit, yet our predictions
+are worse.
+
+\easysubproblem{How can we provide honest error metrics for $R^2$, SSE? It may help to draw a picture of the procedure.}\spc{14}
+
+We can get hold of future data, $\mathbb{D}_*$, and define our $R^2$ and $SSE$
+in terms of the predictions $\yhat_*$ on $\mathbb{D}_*$ and the actual responses
+$\mathbf{y}_*$. Since we don't generally have future data, we partition our data
+set into two pieces:
+\begin{align*}
+	\mathbb{D} &= \mathbb{D}_{train} \cup \mathbb{D}_{test}\\
+	\emptyset &= \mathbb{D}_{train}\cap \mathbb{D}_{test}
+\end{align*}
+
+$\mathbb{D}_{test}$ plays the role of $\mathbb{D}_{*}$ (future data),
+and it is a proportion of $\mathbb{D}$, whose size is determined
+by a parameter $K$:
+
+\begin{align*}
+	K = \frac{n}{n_{test}}\quad \implies \quad \frac{1}{K} = \frac{n_{test}}{n}
+\end{align*}
+
+We build our model using $\mathbb{D}_{train}$, but we define our error metrics
+in terms of $\mathbb{D}_{test}$. We define the error metrics in terms of
+$\mathbb{D}_*$:
+
+\begin{align*}
+	\mathbf{e}_* &:= \y_* - \yhat_*\\
+	oosSSE &:= \mathbf{e}_*^\top\mathbf{e}_*\\
+	oosMSE&:=\frac{oosSSE}{n_{test}}\\
+	ooRMSE&:=\sqrt{oosMSE}\\
+	oosR^2&:=1-\frac{oosSSE}{SST_{test}}\\
+	SST_* &:=\|\y_*-\bar{y_*}\mathbf{1}\|^2
+\end{align*}
+
+
+
+\easysubproblem{The procedure in the previous question produces highly variable honest error metrics. Can you change the procedure slightly to reduce the variation in the honest error metrics? What is this procedure called and how is it done?}\spc{6}
+
+We apply $K$-fold cross-validation. Starting with data set $\mathbb{D}$, we iteratively
+perform $K$ splits. In the first split, we let $\frac{1}{K}=\frac{n_{test}}{n}$ of the
+data be used for $\mathbb{D}_{test}$, while the rest if $\mathbb{D}_{train}$. Once we
+compute a model using $\mathbb{D}_{train}$, we compute the out-of-sample error metrics
+using $\mathbb{D}_{test}$. Then, we choose a different $\frac{1}{K}$ portion of the data
+to use as $\mathbb{D}_{test}$, and compute the errors. We do this a total of $K$ times.
+The result is a we have $K$ out-of-sample metrics, obtained from the out-of-sample
+errors $\mathbf{e}_{*1},\ldots,\mathbf{e}_{*k}$. We can then define:
+
+\begin{align*}
+	S_{oosRMSE}:=\sqrt{\frac{1}{K-1}\sum_{\ell=1}^{K}(oosRMSE_\ell-\overline{oosRMSE})^2}
+\end{align*}
+
+which is a measure of standard deviation.
+
+
+\end{enumerate}
+
+
+\problem{These are some questions related to validation.}
+
+\begin{enumerate}
+
+\easysubproblem{Assume you are doing one train-test split where you build the model on the training set and validate on the test set. What does the constant $K$ control? And what is its tradeoff?}\spc{4}
+
+The constant $K$ controls the proportion of the original data set $\mathbb{D}$ that is used
+as test data. That is, $\frac{1}{K}$ of the observations (row vectors) in $\mathbb{D}$ make up
+$\mathbb{D}_{test}$; the remaining vectors become $\mathbb{D}_{train}$. The smaller the
+$K$, the more data we are using for $\mathbb{D}_{test}$, so our mode will be subject
+to higher out-of-sample error, but it will be less variable (we can trust it more). The larger the $K$,
+the less data we use for $\mathbb{D}_{test}$, and hence the more data in $\mathbb{D}_{train}$,
+resulting in less out-of-sample error on average but with more variability (harder to trust).
+
+\easysubproblem{What problem does $K$-fold CV try to solve?}\spc{5}
+
+$K$-fold CV tries to address the issue of stability of the error metrics.
+The out-of-sample error metrics become more reliable, and we can better trust
+them to estimate the performance of the model.
+
+\hardsubproblem{[MA] Theoretically, how does $K$-fold CV solve this problem? The Internet is your friend.}\spc{5}
+
+%\intermediatesubproblem{Assume you are doing one train-test split where you build the model on the training set and validate on the test set. If $n$ was very large so that there would be trivial misspecification error even when using $K=2$, would there be any benefit at all to increasing $K$ if your objective was to estimate generalization error? Explain.}\spc{4}
+
+\end{enumerate}
+
+\end{document}
+
+
+

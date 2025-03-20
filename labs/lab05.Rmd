@@ -495,9 +495,9 @@ for (j in 1: n_train) {
   # in-sample error
   s_e_by_p[j] = sd(mod$residuals)
   
-  b = mod$coefficients[1:p_plus_one]
-  y_hat = as.matrix(cbind(1, boston_test[, 1:13])) %*% b
+  y_hat = as.matrix(cbind(1, boston_test[, 1:13])) %*% mod$coefficients[1:p_plus_one]
   
+  # out-of-sample error
   ooss_e_by_p[j] = sd(boston_test$medv - y_hat)
 }
 ```
@@ -516,22 +516,48 @@ ggplot(
 
 Is this shape expected? Explain.
 
-#TO-DO
+Yes, because the "random junk" that we added is just fitting the noise;
+it has nothing to do with our features. The in-sample error goes to zero
+because the junk matrix becomes full rank and becomes a perfect fit.
+However, predictions are worse, a demonstrated by the out-of-sample blowing
+up. This is because the least squares estimates for the features that matter
+become worse as we add junk features, and the junk features skew our
+predictions.
 
 Now repeat the exercise above except use 5-fold CV (K=5 cross validation) for each p. The code below will also plot the oos RMSE. This oos RMSE curve should be similar to the curve in the above problem, but now it will be more stable.
 
 ```{r}
 K = 5
-oos_e_by_p_k = matrix(NA, nrow = n, ncol = n) #save all residuals here - each row are the residuals for number of features = j
+ooss_e_by_p_k = matrix(NA, nrow = n, ncol = n) #save all residuals here - each row are the residuals for number of features = j
 
-#TODO
-
+print(length(MASS::Boston$medv[idx_train]))
+p = p_plus_one - 1
+for (j in (p_plus_one + 1): ncol(X_with_junk)) {
+  for (k in 1:K) {
+    idx_test = seq(from=(k-1) * n_test + 1, to = min(n, k * n_test))
+    idx_train = setdiff(1:n, idx_test)
+    
+    X_train = X_with_junk[idx_train, 1:j]
+    y_train = MASS::Boston$medv[idx_train]
+    
+    X_test = X_with_junk[idx_test, 1:p]
+    y_test = MASS::Boston$medv[idx_test]
+    
+    # Fit linear model with training set
+    mod = lm(y_train ~ 0 + as.matrix(X_train))
+    
+    # Use model to compute predictions on the test set
+    yhat = as.matrix(cbind(1, X_test)) %*% mod$coefficients[1:p_plus_one]
+    
+    ooss_e_by_p_k[j, idx_test] = y_test - yhat
+  }
+}
 
 #now plot it
 pacman::p_load(ggplot2)
 ggplot(data.frame(
-    s_e = apply(ooss_e_by_p_k, 1, sd), #we are taking the sd over all n oos residuals
-    p = 1 : n_train
+    s_e = apply(ooss_e_by_p_k, 1, sd, na.rm = TRUE), #we are taking the sd over all n oos residuals
+    p = 1 : ncol(ooss_e_by_p_k)
   )) +
   geom_line(aes(x = p, y = s_e))
 
