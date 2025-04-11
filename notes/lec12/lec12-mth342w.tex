@@ -94,8 +94,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		and $f$ is the ``best" function that takes our predictors $x_1,x_2,\ldots,x_p$
 		and uses them as proxies to the true drivers. 
 		\item \textbf{Misspecification Error}: Given by $f-h^*=\epsilon-\delta$, it occurs
-		from choosing a candidate set of functions that do not necessarily capture
-		the function form of $f$.
+		from choosing a candidate set of functions that does not necessarily capture
+		the functional form of $f$.
 		\item \textbf{Estimation Error}: Given by $h^*-g$, incurred by the fact that
 		even though $h^*$ is the best function from our candidate set, an algorithm
 		$\mathcal{A}$ produces $g$ and cannot hope to produce $h^*$.
@@ -105,9 +105,9 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	of information does not change, we do not know anything more, and also not
 	anything less. It's also not misspecification, because even though we discussed
 	our theory in the context of OLS, the same ideas applies to other models, such
-	as logistic regression, and overfitting can occur there.
+	as logistic regression, and overfitting can occur there. That leaves estimation error.
 	
-	That leaves estimation error. Suppose the \textit{true model} is
+	Suppose the \textit{true model} is
 	\begin{align*}
 		h^*(\mathbf{x}) = \beta_0 + \beta_1 x_1 + \cdots + \beta_1 x_p
 	\end{align*}
@@ -121,29 +121,29 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{align*}
 		g(\mathbf{x}) = b_0 + b_1 x_1 + \cdots + b_p x_p + {\color{red}  b_{fake} x_{fake}}
 	\end{align*}
-	Since we are projection the response vector $\mathbf{y}$ onto a new dimension,
+	Since we are projecting the response vector $\mathbf{y}$ onto a new dimension,
 	in the direction of $\mathbf{x}_{fake}$, the projection of $\mathbf{y}$ is unlikely to
 	be zero, and hence $b_{fake}\neq 0$ (see Figure~\ref{fig:project-xfake}).
 	\begin{figure}
 		\centering
-		\includegraphics[width=0.25\textwidth]{project-onto-fake-feature}
+		\includegraphics[width=0.35\textwidth]{project-onto-fake-feature}
 		\caption{Projecting $\mathbf{y}$ in the direction of some vector $\mathbf{x}_{fake}$
 		that accounts for feature $x_fake$.}
 		\label{fig:project-xfake}
 	\end{figure}
-	The $b_fake$ will cause more estimation error ($h^*-g$). To measure estimation error,
+	The $b_{\text{fake}}$ will cause more estimation error ($h^*-g$). To measure estimation error,
 	in theory we can use $\|\bm{\beta}-\mathbf{b}\|^2$, which approaches $0$ as
 	$n\to\infty$ (holding $p$ constant; this is proved in MATH 343). In the real
 	world, however, we don't know $\bm{\beta}$.
 	\section*{Honest Performance Metrics}
 	What can we do to obtain honest performance metrics? As we saw, in-sample is dishonest
-	because it cannot be \textit{detect} when we add projections onto garbage features.
+	because it cannot \textit{detect} when we add projections onto garbage features.
 	Using our current approach, $b_{fake}$ will cause our model to yield errors in the future.
 	
-	Instead, we can calculate performance on future data, as depicted in Figure~\ref{fig:future-data}
+	Instead, we can calculate performance on future data, as depicted in Figure~\ref{fig:future-data}.
 	\begin{figure}
 		\centering
-		\includegraphics[width=0.3\textwidth]{future-data}
+		\includegraphics[width=0.4\textwidth]{future-data}
 		\caption{Using future data $\mathbb{D}_*$ to test performance of model
 		built using $\mathbb{D}$.}
 		\label{fig:future-data}
@@ -166,7 +166,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{align*}
 	Note that for the $oosMSE$, we no longer need the insurance 
 	of subtracting $p+1$ in the denominator. Also, $oosR^2\leq 1$, but it can be
-	negative; the result we proved for OLS does not hold here. $oosR^2$ is negative,
+	negative; the result we proved for OLS does not hold here. If $oosR^2$ is negative,
 	then our model performs poorly.
 	\section*{Using Future Data}
 	The problem we now face is that, in general, we do not have data $\mathbb{D}_*$
@@ -197,10 +197,10 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			K:=\frac{n}{n_{\text{test}}} \iff \frac{1}{K} = \frac{n_{\text{test}}}{n}
 		\end{align*}
 		Note that $K>1$; it is not between $0$ and $1$, as we may be used to thinking
-		about proportions. We will see why later. Unfortunately, there is no great
-		theory in general on how to choose $K$. The values $K=5$ and $K=10$ are good defaults,
-		corresponding to using 20\% and 10\% of $\mathbb{D}$ as $\mathbb{D}_{\text{test}}$,
-		respectively. What is the tradeoff?
+		about proportions. Later we will see why we define it this way. Unfortunately,
+		there is no great theory in general on how to choose $K$. The values $K=5$ and
+		$K=10$ are good defaults, corresponding to using 20\% and 10\% of $\mathbb{D}$
+		as $\mathbb{D}_{\text{test}}$, respectively. What is the tradeoff?
 		
 		\begin{itemize}
 			\item \textbf{Smaller $K$}: This implies $\frac{1}{K}$ is large, which means
@@ -216,7 +216,9 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			\item \textbf{Larger $K$}: This implies $\frac{1}{K}$ is small, which means
 			the proportion of data used for $\mathbb{D}_{\text{test}}$ is small. Thus, we
 			do not have a lot to go on for our out-of-sample error metrics, causing them
-			to be highly variable, thereby making them hard to trust.
+			to be highly variable, thereby making them hard to trust. Put another way,
+			estimation error may be smaller, but it is accompanied by a larger
+			variance.
 		\end{itemize}
 		See Figure~\ref{fig:oos-error-vary-by-K}.
 		\begin{figure}
@@ -280,18 +282,18 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	to predict, but since we did not use all of the data, we unnecessarily incur estimation
 	error. Instead, we use $g_{\text{final}}$ which is built by applying
 	the algorithm on the full $\mathbb{D}$. Why should $g_{\text{final}}$ be okay
-	to use given we got $g$ and our out-of-sample metrics from our algorithm and $g$?s
+	to use given we got $g$ and our out-of-sample metrics from our algorithm and $g$?
 	Because the out-of-sample metrics computed using $g$ are conservative with respect to
 	$g_{\text{final}}$, assuming stationary phenomenon.
 	
 	As we can see, a main (and very important) reason we partition $\mathbb{D}$
 	into $\mathbb{D}_{\text{train}}$ and $\mathbb{D}_{\text{test}}$ is to get a sense
-	of $g_{\text{final}}$ will do when we build it with \textit{all the data}
+	of how $g_{\text{final}}$ will do when we build it with \textit{all the data}
 	(with $\mathbb{D}$).
 	\section*{$K$-Fold Cross-Validation}
-	When we split $\mathbb{D}$ into a $\mathbb{D}_{\text{train}}$ and $\mathbb{D}_{\text{test}}$
+	When we split $\mathbb{D}$ into $\mathbb{D}_{\text{train}}$ and $\mathbb{D}_{\text{test}}$
 	with $K:=\frac{n}{n_{\text{test}}}$, we need to keep in mind that if $K$ is large,
-	the out-of-sample metrics will be stable. We can apply the following procedure:
+	the out-of-sample metrics will be unstable. We can apply the following procedure:
 	\begin{enumerate}[label=(\alph*)]
 		\item \textbf{Step 0}: Start with your data set $\mathbb{D}$:
 		\begin{align*}
@@ -306,6 +308,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				{}
 			\end{bmatrix}
 		\end{align*}
+		Shuffle the data (that is, shuffle the rows).
 		\item \textbf{Step 1}: Perform 1 split, where we let the first
 		$n_{\text{test}}$ rows (observations) be $\mathbb{D}_{\text{test}}$, while the
 		rest are $\mathbb{D}_{\text{train}}$:
@@ -359,8 +362,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		not the case. The point being emphasized is that the second portion of the
 		overall $\mathbb{D}$ (and hence $X$ and $\mathbf{y}$) is being used for testing,
 		and the remaining for training.
-		\item \textbf{Step $K$}: We continue until we perform the $K$th split, similar to before,
-		and a corresponding residual vector $\mathbf{e}_{*K}$.
+		\item \textbf{Step $K$}: We continue until we perform the $K$th split, similar to
+		the previous steps, and compute a corresponding residual vector $\mathbf{e}_{*K}$.
 	\end{enumerate}
 	At the end, we have a vector $\mathbf{e}_*$ of length $n$ obtained by concatenating the
 	$K$ vectors each of length about $n_{\text{test}} = n/K$:
@@ -372,7 +375,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			\mathbf{e}_{*K}
 		\end{bmatrix}
 	\end{align*}
-	Each split ``crosses $\mathbf{D}_{\text{test}}$" ``over", hence the procedure is
+	Each split ``crosses $\mathbb{D}_{\text{test}}$" ``over", hence the procedure is
 	named \textbf{cross-validation}, or \textbf{$K$-fold CV}. This implies stability
 	in the OOS metrics.
 	
@@ -386,7 +389,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		S_{oosRMSE}:=\sqrt{\frac{1}{K-1}\sum_{\ell=1}^{K}
 			\left(oosRMSE_{\ell} - \overline{oosRMSE}\right)^2}
 	\end{align*}
-	and now we have a confidence interval real standard deviation $\sigma_{oosRMSE}$
+	and now we have a confidence interval for the real standard deviation $\sigma_{oosRMSE}$
 	of the error:
 	\begin{align*}
 		CI_{\sigma, 95\%}=\left[

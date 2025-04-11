@@ -290,8 +290,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				from $\mathbb{D}\setminus \Dtest$ to use as $\mathbb{D}_{\text{select}, k}$
 				(Say, we start from the bottom of $\mathbb{D}\setminus \Dtest$).
 				What remains is $\mathbb{D}_{\text{train}, k}$.
-				\item Compute a prediction function $g_{k}^{(m)}=\mathcal{A}_m(\mathbb{D}_{\text{select}, k}, \mathcal{H}_m)$.
-				\item Predict on $\mathbb{D}_{\text{select}, k}$ using $g_{k}^{(m)}$, yielding error
+				\item Compute a prediction function $g_{k}^{(m)}=\mathcal{A}_m(\mathbb{D}_{\train, k}, \mathcal{H}_m)$.
+				\item Predict on $\mathbb{D}_{\test, k}$ using $g_{k}^{(m)}$, yielding error
 				vector $\bm{e}_k^{(m)}$.
 			\end{itemize}
 			\item After doing $K_\select$ folds for the $m$th model, stack the residual
@@ -305,7 +305,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 						\bm{e}_{1}^{(m)}
 					\end{bmatrix}
 			\end{align*}
-			\item Compute $oosRMSE_m$ using $\bm{e}_m$.
+			\item Compute $oosRMSE_m$ using $\bm{e}_m$. (How? Is it the mean?)
 		\end{itemize}
 		\item \textbf{Step 5}: Now we have $oosRMSE_1,oosRMSE_2,\ldots,oosRMSE_M$. Take $m_*$ to be
 		\begin{align*}
@@ -314,10 +314,14 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			oosRMSE_m
 			\}
 		\end{align*}
-		\item \textbf{Step 6}: Compute $g_{\text{final}} = \mathcal{A}_{m_*} (\mathbb{D}, \mathcal{H}_{m_*})$.
-		\item \textbf{Step 7}: Predict with $g_{\text{final}}$ on $\Dtest$, and
-		compute $oosRMSE_{*}$. The standard deviation of $oosRMSE_{\text{*}}$
-		is computed from $oosRMSE_1,oosRMSE_2,\ldots,oosRMSE_M$.
+		\item \textbf{Step 6}: Train model $(\mathcal{A}_{m_*}, \mathcal{H}_{m_*})$
+		on $\mathbb{D}\setminus \Dtest$ to get
+		$g_* = \mathcal{A}_{m_*}(\mathbb{D}\setminus \Dtest, \mathcal{H}_{m_*})$.
+		\item \textbf{Step 7}: Predict using $g_{*}$ on $\Dtest$ to obtain
+		$oosRMSE_*$.
+		\item \textbf{Step 8}: Train model $(\mathcal{A}_{m_*}, \mathcal{H}_{m_*})$
+		on $\mathbb{D}$ to get $g_{\text{final}} = \mathcal{A}_{m_*} (\mathbb{D}, \mathcal{H}_{m_*})$. We use $oosRMSE_{*}$ as a conservative estimate of the
+		future out-of-sample performance of $g_{\text{final}}$.
 	\end{itemize}
 	There is a trade-off here in that this requires more computation, but we may get
 	a better model.
@@ -329,6 +333,9 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	However, we are more sure that we pick the best of our $M$ models.
 	Note the algorithm for select-CV had a nested loop; this algorithm would
 	add yet another level of for $K_\test$.
+	
+	\href{
+		https://mlr.mlr-org.com/articles/tutorial/nested_resampling.html}{Click here to navigate to a page with an example to visualize nested resampling}.
 	\section*{Applying Model Selection Procedures}
 	The three model selection procedures we just discussed (no CV, select CV, and
 	select and test CV) are useful in many settings. The three we will study are:
@@ -380,8 +387,16 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\item \textbf{Step F}: After $F$ steps, where $F$ is a pre-determined maximum, or
 		at each step, look at the results of the $oosRMSE$ from $\Dselect$, and when you
 		are sure that the $oosRMSE$ is increaseing, stop. The reason it may start to
-		increase is due to overfitting. Suppose this occurs at iteration $t_*$. Then
-		compute a model
+		increase is due to overfitting. Suppose this occurs at iteration $t_*$
+		(see Figure~\ref{fig:greedy-stepwise-oosRMSE}).
+		\begin{figure}
+			\centering
+			\includegraphics[width=0.8\textwidth]{greedy-forward-stepwise-oosRMSE-by-iteration}
+			\caption{Greedy Forward Stepwise Modeling, tracking the out-of-sample RMSE
+			across iterations}
+			\label{fig:greedy-stepwise-oosRMSE}
+		\end{figure}
+		Then compute a model
 		\begin{align*}
 			g_* = \mathcal{A}(\Dtrain \cup \Dselect, \mathcal{H}_{t_*})
 		\end{align*}
