@@ -151,21 +151,70 @@ against it in undergraduate study.
 
 \easysubproblem{How did Kasparov defeat Deep Blue? Can you put this into the context of over and underfiting?}\spc{1}
 
+Kasparov made a move that does not occur often in a master competition. Therefore,
+the number of data points $n$ and the number of features $p$ were both low in
+regards to the move (how players have responded to it in the class, how effective
+it was, the win rate of the player who responded with that move, etc). If the
+computer were to build a predictive model to know how to counter that move,
+the model would suffer from underfitting because of the small $n$ and $p$.
+
 \easysubproblem{Why was Fischer able to make such bold and daring moves?}\spc{1}
 
 \easysubproblem{What metric $y$ is Google predicting when it returns search results to you? Why did they choose this metric?}\spc{1}
 
+When Google returns search results, they are measuring ``usefulness"
+or ``relevance" of the results. Google measures this in order to improve
+their search algorithms, thereby refining getting closer to providing you
+with the information that you are looking for.
+
 \easysubproblem{What do we call Google's \qu{theories} in this class? And what do we call \qu{testing} of those theories?}\spc{1}
+
+Google's theories are akin to creating a model, which consists of getting some
+data $\mathbb{D}$, an algorithm $\mathcal{A}$, and a set of candidate functions
+$\mathcal{H}$. Testing those theories corresponds to out-of-sample validation with
+$g = \mathcal{A}(\mathbb{D}, \mathcal{H})$ on $\mathbb{D}_{\text{test}}$.
 
 \easysubproblem{p315 give some very practical advice for an aspiring data scientist. There are a lot of push-button tools that exist that automatically fit models. What is your edge from taking this class that you have over people who are well-versed in those tools?}\spc{1}
 
+A student that succeeds in this class is well-equipped to assess their predictions
+and models. We are aware of the dangers of overfitting or even underfitting,
+the importance of using honest metrics and viewing results statistically
+without letting the model be the final say.
+
 \easysubproblem{Create your own 2$\times$2 luck-skill matrix (Fig. 10-10) with your own examples (not the ones used in the book).}\spc{2}
+
+\begin{center}
+	\begin{tabular}{|c|c|c|}
+		\hline
+		{} & \textbf{Low luck} & \textbf{High luck} \\
+		\hline
+		\textbf{Low skill} & Uno & Bingo\\
+		\hline
+		\textbf{High skill} & Billiards & \\
+		\hline
+	\end{tabular}
+\end{center}
 
 \easysubproblem{[EC] Why do you think Billing's algorithms (and other algorithms like his) are not very good at no-limit hold em? I can think of a couple reasons why this would be.}\spc{2}
 
 \easysubproblem{Do you agree with Silver's description of what makes people successful (pp326-327)? Explain.}\spc{2}
 
+Yes. If we were to think of ``hard work", ``natural talent", ``opportunities",
+``environment" as predictors of ``success", then yes, I think this is
+a good model for success. It stands to reason that if you work harder,
+your chance of being successful increases. Similarly, a person who has
+more life opportunities takes more ``shots", and after enough of them,
+some of them ought to land in the basket. 
+
 \easysubproblem{Silver brings up an interesting idea on p328. Should we remove humans from the predictive enterprise completely after a good model has been built? Explain}\spc{2}
+
+No. Part of what makes a ``good" model is the process that led to its creation.
+Silver mentions that we can never be certain about the reason for an inaccurate
+prediction. However, being disciplined in our model construction and prediction
+practices, where we gather a lot of data, from different places, and test our
+predictions honestly, our models can become better. We mut remember that models
+do not have the final say, and they need to be imbued with meaning and
+refined each time.
 
 \easysubproblem{According to Fama, using the notation from this class, how would explain a mutual fund that performs spectacularly in a single year but fails to perform that well in subsequent years?}\spc{1}
 
