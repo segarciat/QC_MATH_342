@@ -16,6 +16,13 @@
 }
 
 \renewcommand{\abstractname}{Instructions and Philosophy}
+\newcommand{\train}{\text{train}}
+\newcommand{\select}{\text{select}}
+\newcommand{\test}{\text{test}}
+
+\newcommand{\Dtrain}{\mathbb{D}_\train}
+\newcommand{\Dselect}{\mathbb{D}_\select}
+\newcommand{\Dtest}{\mathbb{D}_\test}
 
 \begin{document}
 \maketitle
@@ -160,6 +167,12 @@ the model would suffer from underfitting because of the small $n$ and $p$.
 
 \easysubproblem{Why was Fischer able to make such bold and daring moves?}\spc{1}
 
+Fischer was young enough to not be full ``indoctrinated" or ``biased" by the
+heuristics often associated with playing chess. In turn, Fischer predicted
+his opponent did adhere to said heuristics, and used this to (correctly) formulate
+a prediction about what his opponent would do in response, thereby enabling
+him to make such a move.
+
 \easysubproblem{What metric $y$ is Google predicting when it returns search results to you? Why did they choose this metric?}\spc{1}
 
 When Google returns search results, they are measuring ``usefulness"
@@ -190,7 +203,7 @@ without letting the model be the final say.
 		\hline
 		\textbf{Low skill} & Uno & Bingo\\
 		\hline
-		\textbf{High skill} & Billiards & \\
+		\textbf{High skill} & Billiards & Settlers of Catan \\
 		\hline
 	\end{tabular}
 \end{center}
@@ -218,17 +231,50 @@ refined each time.
 
 \easysubproblem{According to Fama, using the notation from this class, how would explain a mutual fund that performs spectacularly in a single year but fails to perform that well in subsequent years?}\spc{1}
 
+The mutual funds built a model $g$ created a model whose $oosRMSE$ was lower
+for observations $\bm{x}$ that were not too far from $\text{Range}[X]$ but
+increased as $\bm{x}$ moved away from $\text{Range}[X]$. Put another way,
+the model suffers from extrapolation that is more severe as observations move
+further from $\text{Range}[X]$, where time $t$ is part of the observation.
+
 \easysubproblem{Did the Manic Momentum model validate? Explain.}\spc{1}
+
+Yes. In the example given by Silver, the investor was able to use past data to create
+a model that earned him a profit (not accounting for transaction costs).
 
 \easysubproblem{Are stock market bubbles noticable while we're in them? Explain.}\spc{1}
 
+According to the efficient market hypothesis they are no, because if they were,
+then people could make a profit. However, under the efficient market hypothesis,
+one cannot beat the market consistently.
+
 \easysubproblem{What is the implication of Shiller's model for a long-term investor in stocks?}\spc{1}
+
+A long-term investor can make successful predictions using the P/E ratio if they wait
+\textit{very} long, thereby being able to make a profit.
 
 \easysubproblem{In lecture one, we spoke about \qu{heuristics} which are simple models with high error but extremely easy to learn and live by. What is the heuristic Silver quotes on p358 and why does it work so well?}\spc{1}
 
+The heuristic is ``follow the crowd, especially when you don't know any better".
+It works well because if many people agree with a certain view, it is likelier that
+it has been considered more and people have had more chances to debunk it.
+Since people still consistently hold the view, chances are that it's a ``safe" view
+to hold. Put another way, if we deviate much from it, it is more likely that
+we are seeing noise.
+
 \easysubproblem{Even if your model at predicting bubbles turned out to be good, what would prevent you from executing on it?}\spc{1}
 
+If the risk associated with the incorrect prediction is much more substantial than the
+reward for getting it right.
+
 \easysubproblem{How can heuristics get us into trouble?}\spc{5}
+
+Heuristics are useful when empirical experience backs it up. However, they can
+get us into trouble if we attempt to apply them in every situation. A heuristic
+is not a proved or justified result, so we might say that its guidance is undeterministic.
+If we use a heuristic to make predictions, and the input that arrives does not
+fall within the assumptions of the heuristics, or differ from the experience on
+which the heuristic is based, we are likely to get our predictions very wrong.
 
 \end{enumerate}
 
@@ -239,27 +285,274 @@ refined each time.
 
 \easysubproblem{What is $g_0$ if you are modeling probability estimates?}\spc{1}
 
+$g_0=\bar{y}$, the proportion of $1$'s in the $n$ observations in our data set
+$\mathbb{D}$.
+
 \easysubproblem{What is $\mathcal{H}_{pr}$ for the probability estimation algorithm that employs the linear model in the covariates with logistic link function?}\spc{3}
+
+\begin{align*}
+	\mathcal{H}_{pr} = \left\{\,
+		\phi(\mathbf{w}\cdot \mathbf{x}): \mathbf{w}\in \mathbb{R}^{p+1}
+	\,\right\}
+\end{align*}
+
+where $\phi$ is the logistic link function, given by
+
+\begin{align*}
+	\phi(u) = \frac{1}{1 + e^{-u}}	
+\end{align*}
 
 \easysubproblem{What is $\mathcal{H}_{pr}$ for the probability estimation algorithm that employs the linear model in the covariates with cloglog link function?}\spc{5}
 
+\begin{align*}
+	\mathcal{H}_{pr} = \left\{\,
+	\phi(\mathbf{w}\cdot \mathbf{x}): \mathbf{w}\in \mathbb{R}^{p+1}
+	\,\right\}
+\end{align*}
+
+where $\phi$ is the cloglog link function, given by
+
+\begin{align*}
+	\phi(u) = 1 - e^{e^{-u}}
+\end{align*}
+
 \easysubproblem{Let $\mathcal{A} : \b = \argmax_{\bv{w} \in \reals^{p+1}}\braces{\ldots}$. Derive the expression that replaces the $\ldots$ which will be a function of $X, \y, \bv{w}, n$. Note: this algorithm fits a \qu{logistic regression}. }\spc{6}
+
+First, suppose the phenomenon is described by
+\begin{align*}
+	y = t(z_1,z_2,\ldots,z_t)
+\end{align*}
+
+where $y\in \mathcal{Y}$ and $\mathcal{Y} = \{0, 1\}$. To use probabilistic
+estimation, we consider $Y \sim \text{Bernoulli}(t(z_1,\ldots,z_t))$, which
+is \text{not} random because $t$ is deterministic. By using $p$ features
+$x_1,\ldots,x_p$ are proxies to the true drivers $z_1,\ldots,z_t$, and
+modeling with a probabilistic function
+
+\begin{align*}
+	f_{pr}:\mathbb{R}^{p+1}\to (0, 1)
+\end{align*}
+
+we approximate $Y$ as
+\begin{align*}
+	Y \sim \text{Bernoulli}(f_{pr}(x_1,\ldots,x_p))
+\end{align*}
+
+we get a random variable $Y$ that depends on $\bm{x}$. We can calculate
+the probability
+\begin{align*}
+	P(\mathbb{D}) = P(Y_1 = y_1, Y_2 = y_2, \ldots, Y_n = y_n | \bm{x}_1,\bm{x}_2,\ldots,\bm{x}_n)
+\end{align*}
+
+where $(\bm{x}_1, y_1),\ldots,(\bm{x}_n, y_n)$ are the $n$ data points in
+$\mathbb{D}$. If we assume that all $n$ observations are independent,
+we can simplify our join probability expression to
+
+\begin{align*}
+	P(\mathbb{D}) = \prod_{i=1}^{n}P(Y_i = y_i \mid \bm{x}_i)
+\end{align*}
+
+Since $Y_i\mid \bm{x}_i$ is Bernoulli, we can use the Bernoulli PMF:
+\begin{align*}
+	P(\mathbb{D}) = \prod_{i=1}^{n}f_{pr}(\bm{x}_i)^{y_i}(1 - f_{pr}(\bm{x}_i))^{1-y_i}
+\end{align*}
+
+Now suppose $\phi$ is the logistic link function. We can approximate
+$P(\mathbb{D})$ using $\phi\in \mathcal{H}_{pr}(\phi)$:
+
+\begin{align*}
+	P(\mathbb{D})
+	&\approx \prod_{i=1}^{n}\phi(\bm{w}\cdot \bm{x}_i)^{y_i}(1 - \phi(\bm{w}\cdot \bm{x}_i))^{1-y_i}\\
+	&=\prod_{i=1}^{n}
+	\left(
+		\frac{1}{1 + e^{-\bm{w}\cdot \bm{x}_i}}
+	\right)^{y_i}
+	\left(
+	\frac{1}{1 + e^{\bm{w}\cdot \bm{x}_i}}
+	\right)^{1-y_i}
+\end{align*}
+
+This final expression is what we attempt to maximize in logistic regression:
+
+\begin{align*}
+	\mathcal{A} : \b = \argmax_{\bv{w} \in \reals^{p+1}}\braces{P(\mathbb{D})}
+\end{align*}
 
 \easysubproblem{Why is logistic regression an example of a \qu{generalized linear model} (glm)?}\spc{2}
 
+Because even though the candidate functions are not linear, they map lines to the
+probability space (via link functions). Since link functions are monotonic,
+they are also injective, and hence we can invert them to obtain an interpretation
+of the results in terms of the linear expression $\bm{w}\cdot\bm{x}$.
+
 \easysubproblem{Consider $\x_*$ to be a new unit. For its prediction, the probability estimate that $y_*=1$ is 37\%, what is the log odds of $y_*=1$?}\spc{2}
+
+In probability estimation modeling, we estimate the probability that
+$y=1$ for some input $\bm{x}$ as
+
+\begin{align*}
+	\hat{p} = \phi(\bm{b}\cdot \bm{x})
+\end{align*}
+
+for some $\bm{b}\in \mathbb{R}^{p+1}$. We are told that $
+\hat{p}=0.37 = \phi(\bm{b}\cdot \bm{x}_*)$. Assuming $\phi$ is the logit
+link function used in logistic regression, the log odds is given by
+
+\begin{align*}
+	\bm{b}\cdot \bm{x}_*
+	= \ln \left(\frac{\hat{p}}{1-\hat{p}}\right)
+	= \ln\left(\frac{0.37}{0.63}\right)
+	\approx -0.53
+\end{align*}
 
 \easysubproblem{If, $\x_*\b = 3.1415$ where $\b$ is the result of the logistic regression fit, what is the probability estimate that $y_*=1$?}\spc{2}
 
+If $\phi$ is the logit link function, then the probability estimate is
+
+\begin{align*}
+	\hat{p} = \phi(\bm{x}_* \bm{b}) = \frac{1}{1 + e^{-\bm{x}_*\bm{b}}} \approx 0.96
+\end{align*}
+
 \intermediatesubproblem{If, $\x_*\b = 3.1415$ where $\b$ is the result of the probit regression fit, what is the probability estimate that $y_*=1$?}\spc{2}
+
+The probit link function is precisely the CDF of the standard normal random variable:
+
+\begin{align*}
+	\phi(u) = \int_{-\infty}^{u}e^{-v^2 / 2} dv
+\end{align*}
+
+This is often denoted as $\Phi(u)$ (capital phi), and its values are usually
+tabulated. The probability estimate is given by
+$\phi(\bm{x}_*\bm{b})=\phi(\bm{x}_*\bm{b}) = \Phi(3.1415)\approx 0.9991595759563348$.
 
 \easysubproblem{In probability estimation modeling, what is the formula for the Brier Score performance metric? Prove the Brier score is always non-positive.}\spc{2}
 
+The formula for the Brier score is
+
+\begin{align*}
+	\overline{s} := \frac{1}{n} \sum_{i = 1}^{n}s_i
+\end{align*}
+
+where
+
+\begin{align*}
+	s_i := -(y_i - \hat{p}_i)^2
+\end{align*}
+
+Here $y_i$ is the response of the $i$th data point in $\mathbb{D}$, $\hat{p}_i$
+is the probability estimate that the $i$th response will be $1$, and $n$ is
+the number of data points in $\mathbb{D}$. Since $y_i \in \{0, 1\}$ and
+$\hat{p}_i \in [0, 1]$, we have $(y_i - \hat{p}_i)^2\in [0, 1]$ and hence
+$s_i \in [-1, 0]$. Since the Brier score $\overline{s}$ is the arithmetic mean
+of $n$ values $s_i$, it too lies in $[0, 1]$, and hence it is non-negative.
+
 \easysubproblem{In probability estimation modeling, what is the formula for the Log Scoring Rule performance metric? Prove the Log Scoring Rule is always non-positive.}\spc{2}
+
+The formula for the Log Scoring Rule is
+
+\begin{align*}
+	\overline{s} := \frac{1}{n} \sum_{i=1}^{n}s_i
+\end{align*}
+
+where
+
+\begin{align*}
+	s_i := y_i \ln(\hat{p}_i) + (1 - y_i) \ln(1 - \hat{p}_i)
+\end{align*}
+
+where $y_i$ is the $i$th response, $\hat{p}_i$ is the probability that the $i$th
+response is $1$, and $n$ is the number of data points in $\mathbb{D}$. It is
+sufficient to show that $s_i \leq 0$, since $\overline{s}$ is the average
+of these $s_i$ values. To see this, note that since $\hat{p}_i$ is a
+(non-degenerate) probability, it follows that $\hat{p}_i\in (0, 1)$ and
+$(1 - \hat{p}_i) \in (0, 1)$. Thus, $\ln(\hat{p}_i) < 0$ and $\ln(1 - \hat{p}_i) < 0$.
+Since $y_i\in \{0, 1\}$, we either have $s_i = \ln(\hat{p}_i)<0$ when $y_i=1$,
+or $s_i = \ln(1 - \hat{p}_i)<0$ when $y_i=0$. In either case, $s_i \leq 0$.
 
 \hardsubproblem{Generalize linear probability estimation to the case where $\mathcal{Y} = \braces{C_1, C_2, C_3}$, i.e. a nominal variable with $L=3$ levels.
 
-Assume the logistic link function. Write down the objective function that is argmax'd over the parameters (you define what these parameters are --- that is part of the question). Once you get the answer you can see how this easily goes to $L > 3$, an arbirtrary\footnote{Note: The algorithm for general $L$ is known as all of the following: \qu{multinomial logistic regression}, \qu{polytomous LR}, \qu{multiclass LR}, \qu{softmax regression}, \qu{multinomial logit} (mlogit), the \qu{maximum entropy} (MaxEnt) classifier, and the \qu{conditional maximum entropy model}. You can inflate your resume with lots of redundant jazzy terms by doing this one question!} number of response levels.\spc{16}}\pagebreak
+Assume the logistic link function. Write down the objective function that is argmax'd over the parameters (you define what these parameters are --- that is part of the question). Once you get the answer you can see how this easily goes to $L > 3$, an arbirtrary\footnote{Note: The algorithm for general $L$ is known as all of the following: \qu{multinomial logistic regression}, \qu{polytomous LR}, \qu{multiclass LR}, \qu{softmax regression}, \qu{multinomial logit} (mlogit), the \qu{maximum entropy} (MaxEnt) classifier, and the \qu{conditional maximum entropy model}. You can inflate your resume with lots of redundant jazzy terms by doing this one question!} number of response levels.\spc{16}}
+
+Suppose our phenomenon is described by
+
+\begin{align*}
+	y = t(z_1, z_2,\ldots,z_t)
+\end{align*}
+
+Given features $x_1,\ldots,x_p$ that are proxies to the true drivers, we introduce
+a probability function $f_{pr}:\mathbb{R}^{p+1}\to(0,1)$ that maps these features
+to a probability. We introduce a random variable $Y$ so that
+
+\begin{align*}
+	Y \sim \text{Categorical}(f_{pr}(\bm{x}_1,\ldots,\bm{x}_n))
+\end{align*}
+
+If we assume the $n$ observations are independent, we get
+
+\begin{align*}
+	P(\mathbb{D})
+	&= P(Y_1 = y_1, \ldots, Y_n = y_n \mid \bm{x}_1,\ldots,\bm{x}_n)\\
+	&=\prod_{i=1}^{n}P(Y_i=y_i \mid \bm{x}_i)
+\end{align*}
+
+If $V \sim \text{Categorical}(p_0,p_1, p_2)$ with support $\{0, 1, 2\}$,
+where $p_0 + p_1 + p_2 = 1$, and the PMF is given by
+
+\begin{align*}
+	f(V = i) = p_i
+\end{align*}
+
+Alternatively, we can write
+
+\begin{align*}
+	P(V = v)
+	&= \prod_{k=0}^{2}p_k^{[v=k]}\\
+	&= p_0^{[v=0]} p_1^{[v=1]}p_2^{[v=2]}
+\end{align*}
+
+where $[v = k]$ is Iverson's bracket notation, which is $1$ if $v=k$, and $0$ otherwise.
+Now we can write
+
+\begin{align*}
+	P(\mathbb{D})
+	&= \prod_{i=1}^{n}P(Y_i = y_i \mid \bm{x}_i)\\
+	&= \prod_{i=1}^{n} f_{pr}(\bm{x}_i)^{[y_i = 0]}f_{pr}(\bm{x}_i)^{[y_i = 1]}f_{pr}(\bm{x}_i)^{[y_i = 2]}
+\end{align*}
+
+Suppose that $\phi$ is the logistic link function
+
+\begin{align*}
+	\phi(u) = \frac{1}{1 + e^{-u}}
+\end{align*}
+
+Consider the candidate set of functions of the form
+
+\begin{align*}
+	\mathcal{H} = \{\,
+	\phi(\bm{w}\cdot \bm{x}) \mid \bm{w}\in \mathbb{R}^{p+1}
+	\,\}
+\end{align*}
+
+Now we approximate the probability that $Y_i = 0$
+by $\phi(\bm{v}\cdot \bm{x}_i)$, the probability that $Y_i=1$ by
+$\phi(\bm{w}\cdot \bm{x}_i)$, and the probability that $Y_i=2$ by
+$1 - (\phi(\bm{v}\cdot\bm{x}_i) + \phi(\bm{w}\cdot\bm{x}_i))$:
+
+\begin{align*}
+	P(\mathbb{D})
+	&=\prod_{i=1}^{n} f_{pr}(\bm{x}_i)^{[y_i = 0]}f_{pr}(\bm{x}_i)^{[y_i = 1]}f_{pr}(\bm{x}_i)^{[y_i = 2]}\\
+	&=\prod_{i=1}^{n}\phi(\bm{v}\cdot\bm{x})^{[y_i = 0]}\phi(\bm{w}\cdot\bm{x})^{[y_i=1]}
+	\left(1 - \phi(\bm{v} \cdot \bm{x}_i) - \phi(\bm{w}\cdot\bm{x}_i)\right)^{[y_i=2]}
+\end{align*}
+
+Thus our algorithm becomes
+
+\begin{align*}
+	\mathcal{A}: \bm{b}_1,\bm{b_2}
+	= \underset{\bm{v},\bm{w}\in\mathbb{R}^{p+1}}{\argmax}\{P(\mathbb{D})\}
+\end{align*}
+
+\pagebreak
 
 For the next two questions, let $n_1 := \sum \indic{y_i = 1}$ and $n_0 := \sum \indic{y_i = 0}$ so that $n = n_0 + n_1$. Then assume $n_1 \neq n_0$. This is equivalent to letting $n_1 = cn$ and $n_0 = (1-c)n$ and assuming $c \in [0,1]/\braces{\half}$.
 
@@ -270,24 +563,131 @@ For the next two questions, let $n_1 := \sum \indic{y_i = 1}$ and $n_0 := \sum \
 
 \end{enumerate}
 
-
+\pagebreak
 \problem{These are some questions related to polynomial-derived features and logarithm-derived features in use in OLS regression.}
 
 \begin{enumerate}
 
 \intermediatesubproblem{What was the overarching problem we were trying to solve when we started to introduce polynomial terms into $\mathcal{H}$? What was the mathematical theory that justified this solution? Did this turn out to be a good solution? Why / why not?}\spc{3}
 
+Our intention was to reduce misspecification error because linear functions are
+not always appropriate for fitting a data set. The use of polynomials is justified
+by the Stone-Weierstrass Theorem, which asserts that a continuous real-valued
+function $f~:~\mathbb{R}^{p}\to\mathbb{R}$ can be accurately approximated by a polynomial.
+This turned out to be a good solution because when $n \gg p$, misspecification
+error can decrease much more than the estimation error might increase. Put another
+way, increasing $p$ puts us at risk of overfitting, but if $n$ is large,
+than it is unlikely that we are overfitting, and allowing for polynomials enables
+us to reduce misspecification error meaningfully.
+
+Moreover, assuming we use polynomials of degree $k$, and our data is not
+categorical, as long as our data set has more than $k$ distinct values
+of $x$, the resulting transformed matrix will be full rank. Hence, we can
+still use OLS.
+
+One downside is that high degree polynomials are subject to Runge's Phenomenon, which
+may affect the accuracy at the endpoints of the interval that the inputs belong to.
+
 \intermediatesubproblem{We fit the following model: $\yhat = b_0 + b_1 x + b_2 x^2$. What is the interpretation of $b_1$? What is the interpretation of $b_2$? Although we didn't yet discuss the \qu{true} interpretation of OLS coefficients, do your best with this.}\spc{4}
+
+When the input $x$ changes by 1 unit, the response changes by $b_1 + b_2$
+units. More generally, when the input changes by $k$ units, the response
+changes by $b_1 + b_2k$ units.
+
+\begin{align*}
+	\Delta \bar{y}
+	&= (b_0 + b_1 x_{f} + b_2 x_{f}^2) - (b_0 + b_1 x_{0} + b_2 x_{0}^2)\\
+	&= b_1(\Delta x) + b_2(x_f^2 - x_0^2)
+\end{align*}
 
 \hardsubproblem{Assuming the model from the previous question, if $x \in \mathcal{X} = \bracks{10.0, 10.1}$, do you expect to \qu{trust} the estimates $b_1$ and $b_2$? Why or why not?}\spc{7}
 
 \hardsubproblem{We fit the following model: $\yhat = b_0 + b_1 x_1 + b_2 \natlog{x_2}$. We spoke about in class that $b_1$ represents loosely the predicted change in response for a proportional movement in $x_2$. So e.g. if $x_2$ increases by 10\%, the response is predicted to increase by $0.1 b_2$. Prove this approximation from first principles.}\spc{6}
 
+If $x_2$ changes by some amount $\Delta x_2=x_{2,f}=x_{2,0}$ and $x_1$ does not change, we have
+
+\begin{align*}
+	\Delta \hat{y}
+	&= (b_0 + b_1 x_1 + b_2 \ln(x_{2,f})) - (b_0 + b_1 x_1 + \ln(x_{2,0}))\\
+	&=b_2 \ln \left(
+	\frac{x_{2,f}}{x_{2,0}}
+	\right)\\
+	&\approx b_2 \left(
+	\frac{x_{2,f}}{x_{2,0}} - 1
+	\right)\\
+	&=b_2\underbrace{\left(\frac{x_{2,f} - x_{2,0}}{x_{2,0}}\right)}_{\text{proportional change}}
+\end{align*}
+
+Hence, if $x_2$ increases by 10\%, this means the proportional change in the expression
+above is $0.10$, and hence, $\Delta\hat{y}=0.1b_2$.
+
 \easysubproblem{When does the approximation from the previous question work? When do you expect the approximation from the previous question not to work?}\spc{4}
+
+The approximation works when $\ln(x_{2,f}/x_{2,0})\approx \frac{x_{2,f}}{x_{2,0}} - 1$.
+This approximation is valid when $x_{2,f}/x_{2,0}\approx 0$. This comes from
+the Taylor series approximation to
+
+\begin{align*}
+	\ln(1 + x) = x - \frac{x^2}{2} + \frac{x^3}{3} + \cdots \approx x,\quad \text{if } x\approx 0
+\end{align*}
+
+which implies
+
+\begin{align*}
+	\ln(x) = \ln((1 + x) - 1) \approx x - 1
+\end{align*}
+
+Hence the approximation may not work when the proportional change in $x_2$
+differs by a large percentage, say, as the proportional change approaches $1$
+and goes beyond that.
 
 \intermediatesubproblem{We fit the following model: $\natlog{\yhat} = b_0 + b_1 x_1 + b_2 \natlog{x_2}$. What is the interpretation of $b_1$? What is the \emph{approximate} interpretation of $b_2$? Although we didn't yet discuss the \qu{true} interpretation of OLS coefficients, do your best with this.}\spc{2}
 
+Suppose $x_2$ does not change, and $x_1$ changes by $\Delta x_1 = x_{1,f} - x_{1,0}$.
+Then the change in $\ln(\hat{y})$ is given by
+
+\begin{align*}
+	\Delta \ln(\hat{y})
+	&= \ln \left(\frac{\hat{y}_f}{\hat{y}_0}\right)\\
+	&= \ln (\hat{y}_f) - \ln(\hat{y}_0)\\
+	&= b_1(x_{1,f} - x_{1,0})
+\end{align*}
+
+Using the approximation $\ln(u) = u - 1$:
+
+\begin{align*}
+	b_1\Delta x_1 
+	&= \ln \left(\frac{\hat{y}_f}{\hat{y}_0}\right)\\
+	&\approx \left(\frac{\hat{y}_f}{\hat{y}_0} - 1\right)\\
+	&=\frac{\hat{y}_f - \hat{y}_0}{\hat{y}_0}
+\end{align*}
+
+Hence, if $x_1$ changes by $\Delta x_1$, the response undergoes a $b_1\Delta x_1$
+proportional change. Now suppose instead that $x_1$ does not change, but
+$x_2$ changes by $\Delta x_2$. Then a similar calculation yields
+
+\begin{align*}
+	\frac{\hat{y}_f-\hat{y}_0}{\hat{y}_0}
+	&\approx \ln\left(\frac{\hat{y}_f}{\hat{y}_0}\right)\\
+	&=b_2\ln \left(\frac{x_{2,f}}{x_{2,0}}\right)\\
+	&\approx b_2 \left(\frac{x_{2,f} - x_{2,0}}{x_{2,0}}\right)
+\end{align*}
+
+Hence, a proportional change in $x_2$ by $\frac{x_{2,f} - x_{2,0}}{x_{2,0}}$ results
+in a $b_2\cdot \left(\frac{x_{2,f}-x_{2,0}}{x_{2,0}}\right)$ for the predicted response
+$\hat{y}$.
+
 \easysubproblem{Show that the model from the previous question is equal to $\yhat = m_0 m_1^{x_1} x_2^{b_2}$ and interpret $m_1$.}\spc{2}
+
+Assuming the previous model, we use exponentiation to get
+
+\begin{align*}
+ e^{\ln{\hat{y}}} &= e^{b_0 + b_1  x_1+ b_2\ln(x_2)}\\
+ \hat{y} &= e^{b_0}\cdot (e^{b_1})^{x_1} + (e^{\ln x_2})^{b_2}\\
+ \hat{y} &= m_0 m_1^{x_1} x_2^{b_2}
+\end{align*}
+
+where $m_0 = e^{b_0}$ and $m_1 = e^{b_1}$.
 
 \end{enumerate}
 
@@ -299,10 +699,44 @@ For the next two questions, let $n_1 := \sum \indic{y_i = 1}$ and $n_0 := \sum \
 
 \easysubproblem{Define extrapolation and describe why it is a net-negative during prediction.}\spc{3}
 
+Let $X$ be a design matrix with $p$ features. Suppose $X_{\cdot k, \text{min}}$
+denotes the minimum value for the $k$th feature, and $X_{\cdot k, \text{max}}$
+denotes the maximum value for the $k$th feature. If
+$[X_{\cdot, k, \text{min}}, X_{\cdot, k, \text{max}}]$ denotes a closed interval,
+then the range of $X$ is defined to be the rectangle obtained as the Cartesian product
+of all $k$ such intervals:
+
+\begin{align*}
+	\text{Range}[X]
+	= [X_{\cdot,1, \text{min}}, X_{\cdot, 1, \text{max}}] 
+	\times \cdot \times
+	[X_{\cdot,p, \text{min}}, X_{\cdot, p, \text{max}}]
+\end{align*}
+
+Extrapolation is predicting for observations $\bm{x}_*$ that do not belong
+to $\text{Range}[X]$. Extrapolation is a net negative because it assumes
+that the phenomenon will continue to behave the similarly for observations
+outside $\text{Range}[X]$. Put another way, it assumes that the trend
+implied by $\mathbb{D}$ continues to hold outside it. This can lead to
+large out-of-sample errors.
+
 \easysubproblem{Do models extrapolate differently? Explain.}\spc{3}
+
+Yes, different models extrapolate differently. For example, if we use
+a linear model, then a prediction function will assume a linear trend that
+continues to increase (or decrease, depending if the slope is negative)
+outside of $\text{Range}[X]$. Perhaps the phenomenon in actuality has a maximum
+value, but the linear model will nevertheless predict larger (or smaller) values
+for larger inputs. An exponential model will too do this, except the out-of-sample
+error will be much worse due to the rate at which it increases in comparison to
+linear functions.
 
 \easysubproblem{Why do polynomial regression models suffer terribly from extrapolation?}\spc{3}
 
+Polynomials suffer from Runge's phenomenon when they are used for interpolation
+in an interval, especially if they are of high degree. Due to the wild oscillations
+of such polynomials, their rate of change is large. This can lead to large out-of-sample
+errors, especially at the endpoints.
 
 \end{enumerate}
 
@@ -333,22 +767,200 @@ For the next two questions, let $n_1 := \sum \indic{y_i = 1}$ and $n_0 := \sum \
 
 \easysubproblem{Define the fundamental problem of \qu{model selection}.}\spc{6}
 
+Given a data set $\mathbb{D}$, and $M$ different modeling procedures
+$\{(\mathcal{A}_m, \mathcal{H}_m)\}_{m=1}^{M}$, select the best model
+to predict the response for the phenomenon captured by $\mathbb{D}$.
+
 \easysubproblem{Using two splits of the data, how would you select a model?}\spc{8}
+
+We partition the data set as
+$\mathbb{D} = \Dtrain \cup \Dtest$, where $\Dtrain \cap \Dtest = \varnothing$.
+Then, for each of the $m$ models, where $m\in \{1,2,\ldots,M\}$, we do the following:
+\begin{itemize}
+	\item \textbf{Step 1}: Train the $m$th model $(\mathcal{A}_m, \mathcal{H}_m)$
+	on $\Dtrain$, yielding prediction function $g_m := \mathcal{A}_m(\Dtrain, \mathcal{H}_m)$.
+	\item \textbf{Step 2}: Use $g_m$ to predict on $\Dtest$, yielding $\hat{\bm{y}}_m$.
+	\item \textbf{Step 3}: Use $\hat{\bm{y}}_m$ to compute the out-of-sample error
+	metric $oosRMSE_m$.
+\end{itemize}
+
+Then we choose $m_* := \underset{m\in \{1,2,\ldots,M\}}{\argmin} \{ oosRMSE_m\}$.
+We now compute
+
+\begin{align*}
+	g_{\text{final}} := \mathcal{A}_{m_*}(\Dtrain \cup \Dtest, \mathcal{H}_{m_*})
+\end{align*}
+
+and we describe its out-of-sample error using $oosRMSE_{m_*}$, which is a conservative
+estimate of its performance.
 
 \easysubproblem{Discuss the main limitation with using two splits to select a model.}\spc{3}
 
+In the two-split method, we ``open" the test set $\Dtest$ more than once,
+whereas $\Dtest$ should be opaque, only opened once. The method is subject
+to overfitting if any of the $M$ models happens too well on $\Dtrain$ and $\Dtest$.
+
 \easysubproblem{Using three splits of the data, how would you perform model selection?}\spc{3}
+
+Let $n$ be the number of data points in a data set $\mathbb{D}$, and let
+$\{(\mathcal{A}_m,\mathcal{H}_m)\}_{m=1}^{M}$ be $M$ pre-specified models.
+
+\begin{itemize}
+	\item \textbf{Step 0}: Select a value $K_\test >1$ and define
+	\begin{align*}
+		n_\test := \frac{n}{K_\test}
+	\end{align*}
+	Similarly, select a value $K_\select>1$, and define
+	\begin{align*}
+		n_\select &:= \frac{n - n_\test}{K_\select}\\
+		n_\train &:= n - n_\test - n_\select
+	\end{align*}
+	\item \textbf{Step 1}: Shuffle $\mathbb{D}$, and partition it into
+	$\Dtrain$, $\Dselect$, and $\Dtest$, with $n_\train$, $n_\select$, and $n_\test$
+	data points, respectively.
+	\item \textbf{Step 2}: For each model $(\mathcal{A}_m, \mathcal{H}_m)$, where
+	$m\in \{1,2,\ldots,M\}$:
+	\begin{itemize}
+		\item Compute the prediction function $g_m := \mathcal{A}_m(\Dtrain, \mathcal{H}_m)$.
+		\item Use $g_m$ to predict on $\Dselect$, yielding predictions $\hat{\bm{y}}_m$.
+		\item Use $\bm{y}_{\text{train}}$ and $\bm{y}_m$ to compute $oosRMSE_m$.
+	\end{itemize}
+	\item \textbf{Step 3}: Choose the model with the smallest out-of-sample error:
+	\begin{align*}
+		m_* := \underset{m\in\{1,2,\ldots,M\}}{\argmin} \{ oosRMSE_m\}
+	\end{align*}
+	\item \textbf{Step 4}: Use model $m_*$ to compute the prediction function
+	on $\Dtrain \cup \Dselect$:
+	\begin{align*}
+		g_{**} := \mathcal{A}_{m_*}(\Dtrain \cup \Dselect, \mathcal{H}_{m_*})
+	\end{align*}
+	\item \textbf{Step 5}: Use $g_{**}$ to predict out-of-sample, that is, on $\Dtest$.
+	Then use the predictions to compute an out-of-sample error metric $oosRMSE_{**}$.
+	\item \textbf{Step 6}: Use the entire data set to compute the final prediction function,
+	still using model $m_*$:
+	\begin{align*}
+		g_{\text{final}}
+		:= \mathcal{A}_{m_*}(\Dtrain \cup \Dselect \cup \Dtest, \mathcal{H}_{m_*})
+	\end{align*}
+	The value $oosRMSE_{**}$ from step 5 is a conservative estimate of the out-of-sample
+	performance of $g_{\text{final}}$.
+\end{itemize}
 
 \easysubproblem{How does using both inner and outer folds in a double cross-validation nested resampling procedure improve the model selection procedure?}\spc{3}
 
+The nested resampling procedure is designed to allow $\Dtest$ to vary rather than be
+fixed. After selecting a $K_\test$ proportion to be $\Dtest^{(1)}$, the procedure performs
+a $K_\select$-cross validation procedure, ultimately computing some $oosRMSE_1$.
+The procedure continues this way, eventually selecting a final $K_\test$ proportion
+to be $\Dtest^{(K_\test)}$, and yielding a collection of out-of-sample error metrics
+$oosRMSE_1,\ldots,oosRMSE_{K_\test}$. The model selection procedure aims to reduce
+the variation in the out-of-sample error metric when computing $g_{\text{final}}$
+on $\mathbb{D}$.
+
 \easysubproblem{Describe how $g_{\text{final}}$ is constructed when using nested resampling on three splits of the data.}\spc{5}
+
+\begin{itemize}
+	\item \textbf{Step 0}: Select a value $K_\test >1$ and define
+	\begin{align*}
+		n_\test := \frac{n}{K_\test}
+	\end{align*}
+	Similarly, select a value $K_\select>1$, and define
+	\begin{align*}
+		n_\select &:= \frac{n - n_\test}{K_\select}\\
+		n_\train &:= n - n_\test - n_\select
+	\end{align*}
+	Also, shuffle $\mathbb{D}$.
+	\item \textbf{Step 1}: For $k \in \{1,2,\ldots,K_\test\}$:
+	\begin{itemize}
+		\item Select a portion of $\mathbb{D}$ to be $\Dtest^{(k)}$, consisting
+		of $n_\test$ points. Set aside the remaining $n - n_\test$ points
+		to use for $\Dtrain$ and $\Dselect$.
+		\item Use a $K_\select$-CV procedure to compute $\bm{e}_\test^{(k)}$.
+	\end{itemize}
+	\item \textbf{Step 2}: Aggregate the residual vectors across all folds
+	into a single vector of length $n$:
+	\begin{align*}
+		\bm{e} = \begin{bmatrix}
+			\bm{e}_\test^{(1)}\\
+			\bm{e}_\test^{(2)}\\
+			\vdots\\
+			\bm{e}_\test^{(K_\test)}
+		\end{bmatrix}
+	\end{align*}
+	Use $\bm{e}$ to compute the $oosRMSE$ which serves as the conservative estimate
+	of the performance of $g_{\text{final}}$ (which we have yet to compute).
+	\item \textbf{Step 3}: Apply select-CV, which is an extension of (d) where we fix $\Dtest$
+	but let $\Dselect$ vary, to compute $g_{\text{final}}$.
+\end{itemize}
 
 \easysubproblem{Describe how you would use this model selection procedure to find hyperparameter values in algorithms that require hyperparameters.}\spc{3}
 
+We create a set $\Lambda$ of $M$ different hyperparameter values. For each hyperparameter
+value $\lambda_1,\lambda_2,\ldots,\lambda_M$ in $\Lambda$, we have
+an associated model $(\mathcal{A}_{\lambda_1}, \mathcal{H}), (\mathcal{A}_{\lambda_2}, \mathcal{H}),\ldots,(\mathcal{A}_{\lambda_M}, \mathcal{H})$. We apply either
+no-CV, or select CV, or nested resampling to compute the best model (and hence
+the best hyperparameter).
+
 \hardsubproblem{Given raw features $x_1, \ldots, x_{p_{raw}}$, produce the most expansive set of transformed $p$ features you can think of so that $p \gg n$.}\spc{3}
 
+\begin{align*}
+	&x_1, x_2, \ldots, x_{p_{raw}}\\
+	&x_1^2, x_2^2, \ldots, x_{p_{raw}}^2\\
+	&x_1^2, x_2^3, \ldots, x_{p_{raw}}^3\\
+	&x_1 x_2, \ldots, x_1 x_{p_{raw}}, x_2 x_3,\ldots, x_2 x_{p_{raw}}
+	\ldots x_{p_{raw}-1} x_{p_{raw}}\\
+	&\ln(x_1),\ln(x_2),\ldots,\ln(x_{p_{raw}})\\
+	&e^{x_1}, e^{x_2},\ldots e^{x_{p_{raw}}}
+\end{align*}
 
-\easysubproblem{Describe the methodology from class that can create a linear model on a subset of the transformed featuers (from the previous problem) that will not overfit.}\spc{10}
+
+\easysubproblem{Describe the methodology from class that can create a linear model on a subset of the transformed features (from the previous problem) that will not overfit.}\spc{10}
+
+I would use the Greedy Forward Stepwise Modeling procedure.
+
+\begin{itemize}
+	\item \textbf{Step 0}: Create a large set of derived features so that the
+	set of candidate functions $\mathcal{H}$ is large. We did this in the previous part.
+	Let $p$ be the total number of features (after transformations).
+	Begin with $g_0$ as our seed, so that
+	\begin{align*}
+		\mathcal{H}_0 = \{\, w_0 \mid w_0\in \mathbb{R} \}
+	\end{align*}
+	\item \textbf{Step 1}: For each of the $p$ features, fit OLS to
+	\begin{align*}
+		\mathcal{H} = \{\, w_0 + w_1 x_{j} \mid  \bm{w}\in \mathbb{R}^2 \,\}
+	\end{align*}
+	using $\Dtrain$. Then predict using $\Dselect$ to obtain an $oosRMSE$ for each.
+	Record the best feature, $j_1$, based on the best $oosRMSE$.
+	\item \textbf{Step $N$}: At this point assume we have chosen $N$
+	features. For each of the remaining $p-N$ features, fit OLS to
+	\begin{align*}
+		\mathcal{H} = \{\,
+		w_0 + w_1 x_{j_{1}}+\cdots + w_{j_{N}} + w_{j_{N+1}}x_{j_{\text{try}}} \mid \bm{w}\in \mathbb{R}^{N+2}
+		\,\}
+	\end{align*}
+	using $\Dtrain$. Predict using $\Dselect$ to compute $oosRMSE$ for each,
+	and record the best feature as $j_{N+1}$. Note that this removes any previously
+	selected features from consideration.
+\end{itemize}
+
+Stop after $N_0$ steps, where $N_0$ is pre-specified maximum. Also, look at
+the results of each step, and when you are sure that the $oosRMSE$ is increasing,
+stop. It may start increasing due to overfitting, which is what we are trying
+to avoid. Having identified iteration $t_*$ when the algorithm stops $j_{t_{*}}$,
+compute
+
+\begin{align*}
+	g_* = \mathcal{A}(\Dtrain \cup \Dselect, \mathcal{H}_{t_*})
+\end{align*}
+
+where $\mathcal{H}_{t_*}$ contains all the features that were selected through
+iteration $t_{*}$. Use $g_{t_*}$ to predict on $\Dtest$ to compute $oosRMSE_{t_*}$,
+which is a conservative out-of-sample performance estimate of the performance of
+
+\begin{align*}
+	g_{\text{final}} = \mathcal{A}(\Dtrain \cup \Dselect \Dtest, \mathcal{H}_{t_*})
+\end{align*}
 
 \end{enumerate}
 
@@ -358,16 +970,130 @@ For the next two questions, let $n_1 := \sum \indic{y_i = 1}$ and $n_0 := \sum \
 \begin{enumerate}
 \easysubproblem{Write down the step-by-step $\mathcal{A}$ for regression trees.}\spc{7}
 
+	Start with $\mathbb{D}$. Let $x_{(i)}$ denote the $i$th smallest
+value in a vector $\bm{u}$.
+\begin{itemize}
+	\item \textbf{Step 1}: Let $\bm{x}_k$ denote the $k$th vector, for $1\leq k\leq p$,
+	containing all $n$ possible values for the $k$th feature.
+	Let's consider every possible orthogonal-to-axis split, i.e:
+	\begin{align*}
+		x_1&\leq \bm{x}_{\cdot 1(1)}, x_1 \leq \bm{x}_{\cdot 1(2)}, \ldots, x_1 \leq \bm{x}_{\cdot 1(n-1)}\\
+		x_2&\leq \bm{x}_{\cdot 2(1)}, x_2 \leq \bm{x}_{\cdot 2(2)}, \ldots, x_2 \leq \bm{x}_{\cdot 2(n-1)}\\
+		x_p&\leq \bm{x}_{\cdot p(1)}, x_p \leq \bm{x}_{\cdot p(2)}, \ldots, x_p \leq \bm{x}_{\cdot p(n-1)}\\
+	\end{align*}
+	This means we have $n\cdot (p-1)$ possible splits. Note we do not
+	consider, for example, $x_1\leq \bm{x}_{\cdot 1(n)}$,
+	or $x_2\leq \bm{x}_{\cdot 2(n)}$, and so on because such a split
+	would have \textit{all} data on one side of the split, and hence
+	there is no split at all.
+	\item \textbf{Step 2}: Pick the best split, i.e., the one with the lowest error,
+	where error is defined as:
+	\begin{align*}
+		SSE_{\text{weighted}} := \frac{n_L SSE_L + n_R SSE_R}{n_L + n_R}
+	\end{align*}
+	where $n_L$ is the number of observations in the left child,
+	$n_R$ is the number of observations in the right child, $SSE_L$
+	is the $SSE$ in the left child, and $SSR_R$ is the $SSE$ in
+	the right child. Note that since we are fitting a local
+	optimization by picking the \textit{best} split each time, this
+	algorithm $\mathcal{A}$ is \textit{greedy}.
+	\item \textbf{Step 3}: Repeat steps (1) and (2) on the subset of $\mathbb{D}$
+	consisting of all the daughter nodes. Note that we can make
+	at most $n$ splits, otherwise we will have $n$ dummies and we
+	would surely overfit. Therefore, stop when the number of points
+	in a child node is below some threshold $N_0$ (default $N_0 = 5$).
+\end{itemize}
+
 \hardsubproblem{Describe $\mathcal{H}$ for regression trees. This is very difficult but doable. If you can't get it in mathematical form, describe it as best as you can in English.}\spc{7}
+
+Regression trees partition the input space into $M$ regions $R_1,R_2,\ldots,R_M$.
+In region $R_m$, there are some data points from $\mathbb{D}$. If an incoming observation
+has its input fall $R_m$ the predicted response will be the average $c_m$ of the responses
+from $\mathbb{D}$ that fall in $R_m$. Therefore, the candidate functions will be:
+
+\begin{align*}
+	\mathcal{H} = \left\{\,
+	\sum_{m=1}^{M}c_m \underset{x\in R_m}{\mathbb{I}} \mid c_m = \text{Mean}\{y\in R_m\}
+	\,\right\}
+\end{align*}
 
 \intermediatesubproblem{Think of another \qu{leaf assignment} rule besides the average of the responses in the node that makes sense.}\spc{3}
 
+We can assign the median.
+
 \intermediatesubproblem{Assume the $y$ values are unique in $\mathbb{D}$. Imagine if $N_0 = 1$ so that each leaf gets one observation and its $\yhat = y_i$ (where $i$ denotes the number of the observation that lands in the leaf) and thus it's very overfit and needs to be \qu{regularized}. Write up an algorithm that finds the optimal tree by pruning one node at a time iteratively. \qu{Prune} means to identify an inner node whose daughter nodes are both leaves and deleting both daughter nodes and converting the inner node into a leaf whose $\yhat$ becomes the average of the responses in the observations that were in the deleted daughter nodes. This is an example of a \qu{backwards stepwise procedure} i.e. the iterations transition from more complex to less complex models.}\spc{5}
+
+\begin{itemize}
+	\item \textbf{Step 1}: Start from $n$ nodes, which with 1 observation.
+	\item \textbf{Step 2}: For each pair of adjacent nodes (at the start,
+	there are at most $\binom{n}{2}$ such pairs), combine the two into a single
+	partition, and compute the resulting decrease in $SSE$. Prune the node that resulted
+	in the smallest decrease in $SSE$.
+	\item \textbf{Step 3}: Repeat step 2 until the number of observations in a
+	node would result in more than $N_0$ observations, for some pre-specified $N_0$.
+\end{itemize}
 
 
 \hardsubproblem{Provide an example of an $f(\x)$ relationship with medium noise $\delta$ where vanilla OLS would beat regression trees in oos predictive accuracy. Hint: this is a trick question.}\spc{1}
 
+Let $f(x) = 2x+1$. If we use OLS with the candidate set of linear functions
+
+\begin{align*}
+	\mathcal{H} = \{\,
+	w_0 + w_1 x \mid w_0,w_1 \in \mathbb{R}
+	\,\}
+\end{align*}
+
+then OLS will do better than regression trees, which would work by computing averages.
+
+
 \easysubproblem{Write down the step-by-step $\mathcal{A}$ for classification trees. This should be short because you can reference the steps you wrote for the regression trees in (a).}\spc{4}
+
+Start with $\mathbb{D}$. Let $x_{(i)}$ denote the $i$th smallest
+value in a vector $\bm{u}$.
+\begin{itemize}
+	\item \textbf{Step 1}: Let $\bm{x}_k$ denote the $k$th vector, for $1\leq k\leq p$,
+	containing all $n$ possible values for the $k$th feature.
+	Let's consider every possible orthogonal-to-axis split, i.e:
+	\begin{align*}
+		x_1&\leq \bm{x}_{\cdot 1(1)}, x_1 \leq \bm{x}_{\cdot 1(2)}, \ldots, x_1 \leq \bm{x}_{\cdot 1(n-1)}\\
+		x_2&\leq \bm{x}_{\cdot 2(1)}, x_2 \leq \bm{x}_{\cdot 2(2)}, \ldots, x_2 \leq \bm{x}_{\cdot 2(n-1)}\\
+		x_p&\leq \bm{x}_{\cdot p(1)}, x_p \leq \bm{x}_{\cdot p(2)}, \ldots, x_p \leq \bm{x}_{\cdot p(n-1)}\\
+	\end{align*}
+	This means we have $n\cdot (p-1)$ possible splits. Note we do not
+	consider, for example, $x_1\leq \bm{x}_{\cdot 1(n)}$,
+	or $x_2\leq \bm{x}_{\cdot 2(n)}$, and so on because such a split
+	would have \textit{all} data on one side of the split, and hence
+	there is no split at all.
+	\item \textbf{Step 2}: Pick the best split, i.e., the one with the lowest error.
+	We need a new error metric because $SSE$ is not appropriate for
+	a categorical response. Define the \textbf{Gini} error metric:
+	\begin{align*}
+		G_{\text{neighbor, avg}} = \frac{n_L G_L + n_R G_R}{n_L + n_R}
+	\end{align*}
+	where $n_L$ is the number of observations in the left child,
+	$n_R$ is the number of observations in the right child.
+	We get something similar to $SSE$ by defining
+	\begin{align*}
+		G := \sum_{l=1}^{L}\hat{p}_\ell(1 - \hat{p}_\ell)
+	\end{align*}
+	where $\hat{p}_\ell$ is the proportion of observations of whose response
+	is category $\ell$ in a given node:
+	\begin{align*}
+		\hat{p}_\ell := \frac{
+			\text{number of observations with category $\ell$ in node}}
+		{\text{total number of observations in node}}
+	\end{align*}
+	Note that since we fitting a local optimization by picking
+	the \textit{best} split each time, this algorithm $\mathcal{A}$ 
+	is \textit{greedy}.
+	\item \textbf{Step 3}: Repeat steps (1) and (2) on the subset of $\mathbb{D}$
+	consisting of all the daughter nodes. Note that we can make
+	at most $n$ splits, otherwise we will have $n$ dummies and we
+	would surely overfit. Therefore, stop when the number of points
+	in a child node is below some threshold (default $N_0=1$,
+	possibly because there are only $L$ levels).
+\end{itemize}
 
 \hardsubproblem{Think of another objective function that makes sense besides the Gini that can be used to compare the \qu{quality} of splits within inner nodes of a classification tree.}\spc{6}
 
