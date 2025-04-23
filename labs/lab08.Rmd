@@ -1,0 +1,831 @@
+---
+title: "Lab 8"
+author: "Sergio E. Garcia Tapia"
+output: pdf_document
+---
+
+
+#Visualization with the package ggplot2
+
+I highly recommend using the [ggplot cheat sheet](https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf) as a reference resource. You will see questions that say "Create the best-looking plot". Among other things you may choose to do, remember to label the axes using real English, provide a title and subtitle. You may want to pick a theme and color scheme that you like and keep that constant throughout this lab. The default is fine if you are running short of time.
+
+Load up the `GSSvocab` dataset in package `carData` as `X` and drop all observations with missing measurements. This will be a very hard visualization exercise since there is not a good model for vocab.
+
+```{r}
+pacman::p_load(carData, ggplot2)
+?GSSvocab
+X = na.omit(GSSvocab)
+summary(X)
+```
+
+Briefly summarize the documentation on this dataset. What is the data type of each variable? What do you think is the response variable the collectors of this data had in mind?
+
+## Solution:
+
+The data was obtained from a survey for people who took a vocabulary test. There
+are 7 features:
+
+- `gender`: A factor with two levels (`female` and `male`).
+- `nativeBorn`: Born in US or not, a factor (`yes` and `no`).
+- `ageGroup`: Grouped age of respondents, factor with multiple age ranges.
+- `educGroup`: Education level, a factor with multiple groups.
+- `age`: The age of the respondent. (numeric).
+- `educ`: Years of education of respondent (numeric).
+
+The response is `vocab`, a number (out of 10) of words the respondent got
+correct on the test. The response variable the collectors likely had in mind
+was how smart the respondents were, or how proficient in English.
+
+Create two different plots and identify the best-looking plot you can to examine the `age` variable. Save the best looking plot as an appropriately-named PDF.
+
+```{r}
+?ggtitle
+gss_aes_age = ggplot(data = X, aes(x = age)) +
+  ggtitle("Age of Respondents", subtitle = "General Social Survey, UChicago") +
+  xlab("Age (years)")
+
+# Since age is a numeric predictor, some options include:
+# histogram, scatterplot, density, area, freqpoly
+
+?geom_dotplot
+# According to documentation,
+# > When binning along the x axis and stacking along the y axis, the numbers on
+# > y axis are not meaningful, due to technical limitations of ggplot2.
+gss_aes_age +
+  geom_dotplot(binwidth = 0.055) +
+  scale_y_continuous(NULL, breaks = NULL) # Hide y
+  
+gss_aes_age +
+  geom_density(fill = "cyan", alpha = 0.1)
+
+# I like this one best
+gss_aes_age +
+  geom_histogram(col = "black", fill = "cyan", alpha = 0.3) +
+  ylab("Frequency")
+ggsave("lab08-age-histogram.pdf")
+system("open lab08-age-histogram.pdf")
+```
+
+Create two different plots and identify the best looking plot you can to examine the `vocab` variable. Save the best looking plot as an appropriately-named PDF.
+
+```{r}
+# Vocab is numeric, but it only has 10 values, so we can treat it as
+# categorical.
+gss_aes_vocab = ggplot(data = X, aes(x = factor(vocab))) +
+  ggtitle("Vocabulary Score of Respondents", subtitle = "General Social Survey, UChicago") +
+  xlab("Vocabulary Score")
+
+# Followed exam from: https://r-charts.com/part-whole/pie-chart-ggplot2/
+data.frame(vocab = 0:10, freq = array(table(factor(X$vocab))))
+ggplot(data = data.frame(vocab = 0:10, freq = array(table(factor(X$vocab))))) +
+  aes(x = "", y = freq, fill = factor(vocab)) +
+  geom_col(col = "black") +
+  geom_text(aes(label = factor(vocab)), position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y")
+
+# For categorical variables, bar graphs are the analogue of histograms.
+gss_aes_vocab +
+  aes(fill = factor(vocab)) +
+  labs(fill = "Vocabulary Score", y = "Frequency") +
+  geom_bar(col = "black", alpha = 0.4)
+ggsave("lab08-vocab-bargraph.pdf")
+system("open lab08-vocab-bargraph.pdf")
+```
+
+Create the best-looking plot you can to examine the `ageGroup` variable by `gender`. Does there appear to be an association? There are many ways to do this.
+
+```{r}
+# To plot more than one variable when the "x" variable is categorical,
+# we can use a bar graph.
+
+# See: https://stats.libretexts.org/Bookshelves/Introductory_Statistics/Inferential_Statistics_and_Probability_-_A_Holistic_Approach_(Geraghty)/02%3A_Displaying_and_Analyzing_Data_with_Graphs/2.04%3A_Graphs_of_Categorical_Data
+
+gss_aes_ag_gender = ggplot(data = X, aes(x = ageGroup, fill = gender)) +
+  ggtitle("Age Groups and Genders of Respondents", subtitle = "General Social Survey, UChicago") +
+  labs(x = "Age Groups (in years)", fill = "Gender", y = "Frequency")
+
+# This is called a clustered bar graph.
+gss_aes_ag_gender +
+  geom_bar(position = 'dodge')
+
+# This is like a stacked bar graph, but with relative frequencies
+?geom_bar
+gss_aes_ag_gender +
+  geom_bar(position = 'fill') +
+  ylab("Relative Frequency")
+```
+## Solution
+
+No. The relative frequency of females across all age groups is nearly the same.
+
+Create the best-looking plot you can to examine the `vocab` variable by `age`. Does there appear to be an association?
+
+```{r}
+# Treat vocab as a factor, since there are only 11 possible values.
+gss_aes_vocab_by_age = ggplot(data = X) +
+  aes(x = age, col = factor(vocab)) +
+  ggtitle("Vocabulary Scores Across Age Groups", subtitle = "General Social Survey, UChicago") +
+  labs(x = "Age Groups (in years)", col = "Vocabulary Score", y = "Proportion")
+
+?geom_histogram
+?facet_grid
+gss_aes_vocab_by_age +
+  geom_histogram() +
+  facet_wrap(. ~ factor(vocab), scales = "free") +
+  labs(y = "Frequency")
+
+?geom_boxplot
+gss_aes_vocab_by_age +
+  geom_boxplot() +
+  scale_y_continuous(NULL, breaks = NULL) # Hide y
+```
+
+## Solution
+
+Yes. The multifaceted histograms show slightly different distributions, some
+right-skewed to different degrees, and others having more of a bell-shape.
+
+Add an estimate of $f(x)$ using the smoothing geometry to the previous plot. Does there appear to be an association now?
+
+```{r}
+# Let's treat vocab as a categorical and use a box and whisker plot instead
+ggplot(X) +
+  aes(x = age, y = vocab)  +
+  geom_smooth() +
+  ggtitle("Average Vocabulary Scores Across Age Groups", subtitle = "General Social Survey, UChicago") +
+  labs(x = "Age Groups (in years)", y = "Vocabulary Score")
+```
+
+## Solution
+
+Yes, there appears to be an association. As age increases, vocabulary scores
+tend to increase.
+
+
+Using the plot from the previous question, create the best looking plot overloading with variable `gender`. Does there appear to be an interaction of `gender` and `age`?
+
+```{r}
+ggplot(data = X) +
+  aes(x = age, col = factor(vocab), fill = gender) +
+  ggtitle("Vocabulary by Gender and Age", subtitle = "General Social Survey, UChicago") +
+  labs(x = "Age (in years)", col = "Vocabulary Score", fill ="Gender", y = "Frequency") +
+  geom_histogram() +
+  facet_wrap(. ~ factor(vocab), scales = "free")
+```
+
+## Solution
+
+No. We can see that by the high amount of overlap.
+
+Using the plot from the previous question, create the best looking plot overloading with variable `nativeBorn`. Does there appear to be an interaction of `nativeBorn` and `age`?
+
+```{r}
+ggplot(data = X) +
+  aes(x = age, col = factor(vocab), fill = nativeBorn) +
+  ggtitle("Vocabulary by Gender and US Nativity", subtitle = "General Social Survey, UChicago") +
+  labs(x = "Age (in years)", col = "Vocabulary Score", fill = "US Native", y = "Frequency") +
+  geom_histogram() +
+  facet_wrap(. ~ factor(vocab), scales = "free")
+```
+
+## Solution
+
+No. Within most vocabulary score groups, there is a lot of overlap between
+`nativeBorn` along the different ages, so there is less association.
+
+Create two different plots and identify the best-looking plot you can to examine the `vocab` variable by `educGroup`. Does there appear to be an association?
+
+```{r}
+ggplot(X) +
+  aes(x = educGroup, y = vocab)  +
+  geom_boxplot()
+
+ggplot(X) +
+  aes(x = vocab, fill = educGroup)  +
+  geom_density(alpha = 0.3)
+
+ggplot(data = X) +
+  aes(x = educGroup, col = factor(vocab)) +
+  ggtitle("Vocabulary by Gender and US Nativity", subtitle = "General Social Survey, UChicago") +
+  labs(x = "Age (in years)", col = "Vocabulary Score", fill = "US Native", y = "Frequency") +
+  geom_bar() +
+  facet_wrap(. ~ factor(vocab), scales = "free")
+```
+
+## Solution
+
+Yes, it seems that as the number of years of education increase, so does a
+person's vocabulary score. The distribution goes from right skewed to left
+skewed.
+
+Using the best-looking plot from the previous question, create the best looking overloading with variable `gender`. Does there appear to be an interaction of `gender` and `educGroup`?
+
+```{r}
+ggplot(X) +
+  aes(x = educGroup, y = vocab, color = gender)  +
+  geom_boxplot()
+
+ggplot(data = X) +
+  aes(x = educGroup, col = factor(vocab), fill = gender) +
+  ggtitle("Vocabulary Score by Gender and Education Group", subtitle = "General Social Survey, UChicago") +
+  labs(x = "Age (in years)", col = "Vocabulary Score", fill = "Gender", y = "Frequency") +
+  geom_bar() +
+  facet_wrap(. ~ factor(vocab), scales = "free")
+```
+
+## Solution
+
+No. The similar overlapping suggests that they are not associated.
+
+Using facets, examine the relationship between `vocab` and `ageGroup`. You can drop year level `(Other)`. Are we getting dumber?
+
+```{r}
+ggplot(X) +
+  aes(x = factor(vocab), fill = ageGroup)  +
+  ggtitle("Vocabulary Score by Education Group", subtitle = "General Social Survey, UChicago") +
+  labs(x = "Educ Group", col = "Vocabulary Score", fill = "Gender", y = "Frequency") +
+  geom_bar() +
+  facet_wrap(. ~ ageGroup)
+```
+
+## Solution
+
+No. Across different age groups, the distribution of people scoring higher
+seems to be slowly skewing right. We may be getting slightly smarter, or at
+least not getting dumber.
+
+# Data Wrangling / Munging / Carpentry
+
+Throughout this assignment you should use `dplyr` with `magrittr` piping. I'll be writing the data.table code for you after you're done so you can see it as it may be useful for your future.
+
+```{r}
+pacman::p_load(tidyverse, magrittr, data.table)
+```
+
+Load the `storms` dataset from the `dplyr` package and read about it using `?storms` and summarize its data via `skimr:skim`. 
+
+```{r}
+storms = dplyr::storms
+?storms
+skimr::skim(storms)
+head(storms)
+
+storms_dp = dplyr::storms
+```
+
+To make the modeling exercise easier, let's eliminate rows that have missingness in `tropicalstorm_force_diameter` or `hurricane_force_diameter`.
+
+```{r}
+storms = data.table(storms)
+storms = storms[!is.na(tropicalstorm_force_diameter) & !is.na(hurricane_force_diameter)]
+skimr::skim(storms)
+
+storms_dp = storms_dp %>%
+  filter(!is.na(tropicalstorm_force_diameter) & !is.na(hurricane_force_diameter))
+```
+
+Which column(s) should be converted to type factor? Do the conversion:
+
+```{r}
+storms[,name := factor(name)]
+storms[, category := factor(category)]
+
+storms_dp = storms_dp %>%
+  mutate(name = factor(name)) %>%
+  mutate(category = factor(category))
+```
+
+Reorder the columns so name is first, status is second, category is third and the rest are the same.
+
+```{r}
+setcolorder(storms, c("name", "status", "category"))
+storms
+
+storms_dp = storms_dp %>%
+  select(name, status, category, everything())
+```
+
+Find a subset of the data of storms only in the 2000's.
+
+```{r}
+storms70s = storms[year >= 2000 & year <= 2009]
+storms70s
+
+storms_dp_70s = storms_dp %>%
+  filter(year >= 2000 & year <= 2009)
+storms_dp_70s
+```
+
+Find a subset of the data of storm observations only with category 4 and above and wind speed 100MPH and above.
+
+```{r}
+storms[category %in% c("4", "5") & wind >= 100]
+
+storms_dp %>%
+  filter(wind >= 100) %>%
+  filter(category %in% c("4", "5"))
+```
+
+Create a new feature `wind_speed_per_unit_pressure`.
+
+```{r}
+storms[, wind_speed_per_unit_pressure := wind / pressure]
+head(storms)
+
+storms_dp %>%
+  mutate(wind_speed_per_unit_pressure = wind / pressure)
+```
+
+Create a new feature: `average_diameter` which averages the two diameter metrics. If one is missing, then use the value of the one that is present. If both are missing, leave missing.
+
+```{r}
+storms[, average_diameter := (tropicalstorm_force_diameter + hurricane_force_diameter) / 2]
+head(storms)
+
+compute_avg_diameter = function(x, y) {
+  ifelse(is.na(x) & is.na(y),
+         NA, 
+         ifelse(is.na(x), 
+                y, 
+                ifelse(is.na(y),
+                       x,
+                       (x + y) / 2)))
+}
+storms_dp = storms_dp %>%
+  mutate(average_diameter = compute_avg_diameter(tropicalstorm_force_diameter, hurricane_force_diameter))
+storms_dp
+```
+
+
+For each storm, summarize the maximum wind speed. "Summarize" means create a new dataframe with only the summary metrics you care about.
+
+```{r}
+storms[, .(max_wind_speed=max(wind)), by = name]
+
+storms_dp %>%
+  group_by(name) %>%
+  summarize(max_wind_speed = max(wind))
+```
+
+Order your dataset by maximum wind speed storm but within the rows of storm show the observations in time order from early to late.
+
+```{r}
+storms_dp %>%
+  group_by(name, year) %>%
+  summarize(max_wind_speed = max(wind))%>%
+  arrange(max_wind_speed, year) %>%
+  distinct(name, .keep_all = TRUE)
+```
+
+Find the strongest storm by wind speed per year.
+
+```{r}
+distinct(storms[, max_wind_by_year := max(wind), by = year][wind == max_wind_by_year, .(year, name, wind)])[, .(year, name)]
+
+storms_dp %>%
+  group_by(year) %>%
+  filter(wind == max(wind)) %>%
+  select(year, name, wind) %>%
+  distinct %>%
+  select(year, name)
+```
+
+For each named storm, find its maximum category, wind speed, pressure and diameters. Do not allow the max to be NA (unless all the measurements for that storm were NA).
+
+```{r}
+max_with_na = function(x) {
+  if (all(is.na(x))) {
+    NA
+  } else {
+    max(x, na.rm = TRUE)
+  }
+}
+
+storms_dp %>%
+  group_by(name) %>%
+  summarize(max_pressure = max_with_na(wind), 
+            max_wind_speed = max_with_na(tropicalstorm_force_diameter), 
+            max_with_na(hurricane_force_diameter),
+            max_category = max_with_na(as.numeric(category)))
+```
+
+
+For each year in the dataset, tally the number of storms. "Tally" is a fancy word for "count the number of". Plot the number of storms by year. Any pattern?
+
+```{r}
+storms_dp_count_by_year = storms_dp %>% 
+  group_by(year) %>%
+  tally()
+  #summarize(num_storms = n_distinct(name))
+
+storms_dp_count_by_year
+
+ggplot(data = storms_dp_count_by_year) +
+  aes(x = year, y = n) +
+  geom_histogram(stat = "identity") # Use the counts already in the data frame
+```
+
+## Solution
+
+It seems somewhat cyclic (i.e. sinusoidal).
+
+For each year in the dataset, tally the storms by category.
+
+```{r}
+storms_dp %>%
+  group_by(year, category) %>%
+  tally()
+```
+
+For each year in the dataset, find the maximum wind speed per status level.
+
+```{r}
+storms_dp %>%
+  group_by(year, status) %>%
+  summarize(max_wind_speed = max(wind))
+```
+
+For each storm, summarize its average location in latitude / longitude coordinates.
+
+```{r}
+storms_dp %>%
+  group_by(name) %>%
+  summarize(avg_lat = mean(lat), avg_lng = mean(long))
+```
+
+For each storm, summarize its duration in number of hours (to the nearest 6hr increment).
+
+```{r}
+# Note sometimes different storms have the same name, so they seem to
+# span years in the result below.. Unfortunately there is no particular way
+# to distinguish them in this data set. A heuristic we could use is to look
+# at them across different years, but a storm could occur on the boundary
+# of a year, so that may not be appropriate.
+?ISOdatetime
+?difftime
+storms_dp
+storms_dp %>%
+  mutate(date = ISOdatetime(year, month, day, hour, 0, 0)) %>%
+  group_by(name) %>%
+  summarize(duration = difftime( max(date), min(date), units = c("hours")))
+```
+
+For storm in a category, create a variable `storm_number` that enumerates the storms 1, 2, ... (in date order).
+
+```{r}
+#storms_dp
+storms_dp %>%
+  filter(!is.na(category)) %>%
+  mutate(date = ISOdatetime(year, month, day, hour, 0, 0)) %>%
+  arrange(date) %>%
+  group_by(category) %>%
+  mutate(storm_number = row_number())
+  #arrange(category, date) %>%
+  #select(category, name)
+```
+
+Convert year, month, day, hour into the variable `timestamp` using the `lubridate` package. Although the new package `clock` just came out, `lubridate` still seems to be standard. Next year I'll probably switch the class to be using `clock`.
+
+```{r}
+library(lubridate)
+storms_dp %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0))
+```
+
+Using the `lubridate` package, create new variables `day_of_week` which is a factor with levels "Sunday", "Monday", ... "Saturday" and `week_of_year` which is integer 1, 2, ..., 52.
+
+```{r}
+storms_dp %>%
+  mutate(timestamp = lubridate::make_datetime(year, month, day, hour, 0)) %>%
+  mutate(day_of_week = lubridate::wday(as.Date(timestamp), label = TRUE, abbr = FALSE)) %>%
+  mutate(week_of_year = lubridate::week(timestamp))
+```
+
+For each storm, summarize the day in which is started in the following format "Friday, June 27, 1975".
+
+```{r}
+?lubridate
+storms_dp %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0)) %>%
+  group_by(name) %>%
+  arrange(timestamp) %>%
+  summarize(start_date = min(timestamp)) %>%
+  mutate(began_on = format(start_date, format="%A, %B %d, %Y")) %>%
+  select(name, began_on)
+```
+
+Create a new factor variable `decile_windspeed` by binning wind speed into 10 bins.
+
+```{r}
+storms_dp %>%
+  mutate(decile_windspeed = factor(ntile(wind, 10)))
+```
+
+Create a new data frame `serious_storms` which are category 3 and above hurricanes.
+
+```{r}
+serious_storms = storms_dp %>%
+  filter(!is.na(category) & as.numeric(category) >= 3)
+serious_storms
+```
+
+In `serious_storms`, merge the variables lat and long together into `lat_long` with values `lat / long` as a string.
+
+```{r}
+serious_storms %>%
+  unite(lat_long, lat, long, sep = " / ")
+```
+
+Let's return now to the original storms data frame. For each category, find the average wind speed, pressure and diameters (do not count the NA's in your averaging).
+
+```{r}
+storms_dp %>%
+  filter(!is.na(category)) %>%
+  group_by(category) %>%
+  summarize(avg_wind = mean(wind),
+            avg_pressure = mean(pressure),
+            avg_trop_diam = mean(tropicalstorm_force_diameter),
+            avg_hurr_diam = mean(hurricane_force_diameter))
+```
+
+For each named storm, find its maximum category, wind speed, pressure and diameters (do not allow the max to be NA) and the number of readings (i.e. observations).
+
+```{r}
+storms_dp %>%
+  filter(!is.na(category)) %>%
+  group_by(name) %>%
+  summarize(max_category = max(as.numeric(category)),
+            max_wind = max(wind),
+            max_pressure = max(pressure),
+            max_trop_diam = max(tropicalstorm_force_diameter),
+            max_hurr_diam = max(hurricane_force_diameter))
+```
+
+Calculate the distance from each storm observation to Miami in a new variable `distance_to_miami`. This is very challenging. You will need a function that computes distances from two sets of latitude / longitude coordinates. 
+
+```{r}
+MIAMI_LAT_LONG_COORDS = c(25.7617, -80.1918)
+
+# See https://stackoverflow.com/questions/32363998/function-to-calculate-geospatial-distance-between-two-points-lat-long-using-r
+pacman::p_load(geosphere)
+# Take longitude first
+?distm
+storms_dp %>%
+  mutate(distance_to_miami_meters = distHaversine(cbind(long, lat), cbind(MIAMI_LAT_LONG_COORDS[2], MIAMI_LAT_LONG_COORDS[1]))) %>%
+  select(name, distance_to_miami_meters)
+```
+
+For each storm observation, use the function from the previous question to calculate the distance it moved since the previous observation.
+
+```{r}
+?lag
+storms_dp %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0)) %>%
+  arrange(name, timestamp) %>%
+  group_by(name) %>%
+  mutate(moved_by_meters = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))) %>%
+  select(name, lat, long, timestamp, moved_by_meters)
+```
+
+For each storm, find the total distance it moved over its observations and its total displacement. "Distance" is a scalar quantity that refers to "how much ground an object has covered" during its motion. "Displacement" is a vector quantity that refers to "how far out of place an object is"; it is the object's overall change in position.
+
+```{r}
+?cumsum
+?geosphere
+storms_dp %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0)) %>%
+  arrange(name, timestamp) %>%
+  group_by(name) %>%
+  mutate(moved_by_meters = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))) %>%
+  summarize(
+    distance = sum(moved_by_meters, na.rm = TRUE),
+    direction = bearing(cbind(dplyr::last(long), dplyr::last(lat)), cbind(dplyr::first(long), dplyr::first(lat))),
+    displacement_magnitude = distHaversine(cbind(dplyr::last(long), dplyr::last(lat)), cbind(dplyr::first(long), dplyr::first(lat)))
+  ) %>%
+  summarize(
+    name = name,
+    distance = distance,
+    displacement_x = displacement_magnitude * cos(direction),
+    displacement_y = displacement_magnitude * sin(direction)
+  )
+  #select(name, lat, long, timestamp, moved_by_meters)
+```
+
+For each storm observation, calculate the average speed the storm moved in location.
+
+```{r}
+storms_dp %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0)) %>%
+  arrange(name, timestamp) %>%
+  group_by(name) %>%
+  mutate(average_speed_meters_per_hour = 
+           distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))) / 
+           as.numeric(difftime( timestamp, lag(timestamp), units = c("hours")))
+  ) %>%
+  select(name, average_speed_meters_per_hour)
+```
+
+For each storm, calculate its average ground speed (how fast its eye is moving which is different from windspeed around the eye).
+
+```{r}
+storms_dp %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0)) %>%
+  arrange(name, timestamp) %>%
+  group_by(name) %>%
+  mutate(average_speed_meters_per_hour = 
+           distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))) / 
+           as.numeric(difftime( timestamp, lag(timestamp), units = c("hours")))
+  ) %>%
+  select(name, average_speed_meters_per_hour) %>%
+  summarize(avg_ground_speed = mean(average_speed_meters_per_hour, na.rm = TRUE))
+```
+
+Is there a relationship between average ground speed and maximum category attained? Use a dataframe summary (not a regression).
+
+```{r}
+storms_dp %>%
+  filter(!is.na(category)) %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0)) %>%
+  arrange(name, timestamp) %>%
+  group_by(name) %>%
+  mutate(average_speed_meters_per_hour = 
+           distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))) / 
+           as.numeric(difftime( timestamp, lag(timestamp), units = c("hours")))
+  ) %>%
+  select(name, category, average_speed_meters_per_hour) %>%
+  summarize(avg_ground_speed = mean(average_speed_meters_per_hour, na.rm = TRUE),
+            max_category = max(as.numeric(category), na.rm = TRUE)) %>%
+  arrange(avg_ground_speed)
+```
+
+Now we want to transition to building real design matrices for prediction. This is more in tune with what happens in the real world. Large data dump and you convert it into $X$ and $y$ how you see fit.
+
+Suppose we wish to predict the following: given the first three readings of a storm, can you predict its maximum wind speed? Identify the `y` and identify which features you need $x_1, ... x_p$ and build that matrix with `dplyr` functions. This is not easy, but it is what it's all about. Feel free to "featurize" as creatively as you would like. You aren't going to overfit if you only build a few features relative to the total 198 storms.
+
+```{r}
+storms_dp
+y = storms_dp %>%
+  group_by(name) %>%
+  summarize(max_wind_speed = max(wind)) %>%
+  select(max_wind_speed)
+
+storms_dp %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0)) %>%
+  arrange(name, timestamp) %>%
+  group_by(name) %>%
+  slice(1: 3) %>%
+  select(name, wind, pressure, status)
+```
+
+Fit your model. Validate it. 
+ 
+```{r}
+#TO-DO
+```
+
+Assess your level of success at this endeavor.
+
+#TO-DO
+
+
+# More data munging with table joins
+
+
+```{r}
+pacman::p_load(tidyverse, magrittr, data.table)
+```
+
+We will be using the `storms` dataset from the `dplyr` package. Filter this dataset on all storms that have no missing measurements for the two diameter variables, "tropicalstorm_force_diameter" and "hurricane_force_diameter". Zeroes count as missing as well.
+
+```{r}
+storms_filtered = dplyr::storms %>%
+  filter(!is.na(tropicalstorm_force_diameter) & !is.na(hurricane_force_diameter) & tropicalstorm_force_diameter > 0 & hurricane_force_diameter > 0)
+```
+
+From this subset, create a data frame that only has storm name, observation period number for each storm (i.e., 1, 2, ..., T) and the "tropicalstorm_force_diameter" and "hurricane_force_diameter" metrics.
+
+```{r}
+observations = storms_filtered %>%
+  mutate(timestamp = make_datetime(year, month, day, hour, 0)) %>%
+  arrange(timestamp) %>%
+  group_by(name) %>%
+  mutate(observation = row_number()) %>%
+  select(name, observation, tropicalstorm_force_diameter, hurricane_force_diameter)
+```
+
+Create a data frame in long format with columns "diameter" for the measurement and "diameter_type" which will be categorical taking on the values "hu" or "ts".
+
+```{r}
+#TO-DO
+?pivot_longer
+observations
+pivot_longer(
+  observations,
+  cols = -name)
+```
+
+Using this long-formatted data frame, use a line plot to illustrate both "tropicalstorm_force_diameter" and "hurricane_force_diameter" metrics by observation period for four random storms using a 2x2 faceting. The two diameters should appear in two different colors and there should be an appropriate legend.
+
+```{r}
+#TO-DO
+```
+
+
+#Data Munging: a realistic exercise
+
+This lab exercise may be the most important lab of the semester in terms of real-world experience and "putting it all together". We will be constructing a data frame which will then get passed on to the model-building. So this emulates the pre-steps necessary to get to the point where we assume we're at in this class.
+
+We will be joining three datasets in an effort to make a design matrix that predicts if a bill will be paid on time. Clean up and load up the three files. Then I'll rename a few features and then we can examine the data frames.
+
+Make sure you set the directory of RStudio to the directory where this file lives and make sure you download the bills_dataset folder from github (you can do this via `git pull` and then copying that directory over).
+
+```{r}
+#setwd(...)
+rm(list = ls())
+pacman::p_load(tidyverse, magrittr, data.table, R.utils)
+bills = fread("bills_dataset/bills.csv.bz2")
+payments = fread("bills_dataset/payments.csv.bz2")
+discounts = fread("bills_dataset/discounts.csv.bz2")
+setnames(bills, "amount", "tot_amount")
+setnames(payments, "amount", "paid_amount")
+skimr::skim(bills)
+skimr::skim(payments)
+skimr::skim(discounts)
+```
+
+The unit we care about is the bill. The y metric we care about will be "paid in full" which is 1 if the company paid their total amount (we will generate this y metric later).
+
+Since this is the response, we would like to construct the very best design matrix in order to predict y.
+
+First, join the three datasets in an intelligent way. You will need to examine the datasets beforehand.
+
+```{r}
+# Left join (all.x = TRUE)
+bills_and_discounts = merge(bills, discounts,  by.x = "discount_id", by.y = "id", all.x = TRUE)
+# More rows because multiple payments per bill
+bills_and_discounts_and_payments = merge(bills_and_discounts, payments, by.x = "id", by.y = "bill_id" , all.x = TRUE)
+bills_and_discounts_and_payments[, `id.y` := NULL]
+bills_and_discounts_and_payments[, discount_id := NULL]
+bills_and_discounts_and_payments
+```
+
+Now create the binary response metric `paid_in_full` as the last column and create the beginnings of a design matrix `bills_data`. Ensure the unit / observation is bill i.e. each row should be ONE bill ONLY! 
+
+```{r}
+bills_and_discounts_and_payments[, paid_in_full := as.numeric(sum(paid_amount) >= tot_amount), by = "id"]
+table(bills_and_discounts_and_payments$paid_in_full)
+
+Xy = bills_and_discounts_and_payments[, .(
+    due_date = first(due_date),
+    tot_amount = first(tot_amount),
+    customer_id = first(customer_id),
+    num_days = first(num_days),
+    pct_off = first(pct_off),
+    days_until_discount = first(days_until_discount),
+    paid_in_full = first(paid_in_full)
+  ),
+  by = "id"]
+Xy
+```
+
+How should you add features from transformations (called "featurization")? What data type(s) should they be? Make some features below if you think of any useful ones. Name the columns appropriately so another data scientist can easily understand what information is in your variables. Make sure missingness (if in a categorical variable) is treated as a legal level of that variable. Make sure the response variable is there too in the final data frame.
+
+```{r}
+#TO-DO
+# Make customer ID a factor.
+Xy$customer_id = factor(Xy$customer_id)
+Xy
+# If there are less than 20 bills per customer, call it "other"
+# Make the due date a numeric value
+Xy$due_date = as.numeric(as_datetime(Xy$due_date))
+# make num_Days, pct_off, days_until_discount factors where NA is its own level
+Xy$num_days = addNA(Xy$num_days)
+Xy$pct_off = addNA(Xy$pct_off)
+Xy$days_until_discount = addNA(Xy$days_until_discount)
+Xy
+?as_datetime
+```
+
+Now split the data using K=5, fit a linear model to the response that includes all first order interactions on the training and report oosRMSE on the test.
+
+```{r}
+n = nrow(Xy)
+y = Xy$paid_in_full
+Xy$paid_in_full = NULL
+X = Xy
+
+K = 5
+n_test = ceiling(n / K)
+n_train = n - n_test
+
+test_idx = sample(1:n, n_test)
+train_idx = setdiff(1:n, test_idx)
+
+X_train = X[train_idx,]
+X_test = X[test_idx,]
+
+y_train = y[train_idx]
+y_test = y[test_idx]
+
+lm(y_train ~ ., data = X_train)
+```
