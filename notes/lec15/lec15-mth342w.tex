@@ -371,7 +371,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			w_0+w_1\underbrace{()}_{\text{feature}}\mid \bm{w}\in\mathbb{R}^2
 			\,\}
 		\end{align*}
-		using $\Dtrain$. Then predict using $\Dselect$ to obtain an $oosRMSE$ for ecah.
+		using $\Dtrain$. Then predict using $\Dselect$ to obtain an $oosRMSE$ for each.
 		Record the best feature $j_*$ based on the best $oosRMSE$.
 		\item \textbf{Step 2}: For each of the remaining $p-1$ features, fit OLS to
 		\begin{align*}
@@ -386,7 +386,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		in the remaining $p-1$ features.
 		\item \textbf{Step F}: After $F$ steps, where $F$ is a pre-determined maximum, or
 		at each step, look at the results of the $oosRMSE$ from $\Dselect$, and when you
-		are sure that the $oosRMSE$ is increaseing, stop. The reason it may start to
+		are sure that the $oosRMSE$ is increasing, stop. The reason it may start to
 		increase is due to overfitting. Suppose this occurs at iteration $t_*$
 		(see Figure~\ref{fig:greedy-stepwise-oosRMSE}).
 		\begin{figure}
@@ -433,7 +433,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{align*}
 	Now we can use no-CV, select-CV, or nested resampling to pick the best
 	$\lambda\in \lambda_{\text{grid}}$. The weakness in this approach is having
-	to prec-specify $M$ models, which in this setting translates in pre-specifying
+	to pre-specify $M$ models, which in this setting translates in pre-specifying
 	$M$ hyperparameters. To do this effectively, we need a reasonable range of $\lambda$
 	vales to consider. If our algorithm has more than one hyperparameter,
 	our $\lambda_{\text{grid}}$ might be two-dimensional, i.e., a set of tuples.

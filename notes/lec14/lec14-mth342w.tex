@@ -93,7 +93,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		y = g(\bm{x}) + 
 		\underbrace{(h^*(\bm{x}) - g(\bm{x}))}_{{\text{estimation}}} + 
 		\underbrace{f(\bm{x}) - h^*(\bm{x})}_{\textit{misspecification}} +
-		\underbrace{t(\bm{z}) - f(\bm{x})}_{\textit{ignorance}}
+		\underbrace{t(\bm{x}) - f(\bm{x})}_{\textit{ignorance}}
 	\end{align*}
 	We have learned that we can decrease estimation error by increasing $n$ relative
 	to $p$. Reducing ignorance error requires us to gather more features. Unfortunately,
@@ -201,8 +201,8 @@ X = cbind(1, x, x^2)
 		RMSE &:= \sqrt{MSE}\\
 	\end{align*}
 	Note that we are making a tradeoff. By allowing a quadratic term, our
-	misspecification error increases, but our estimation error increases also.
-	If $p+1\lll n$, then increasing $p$ via these derived features may
+	misspecification error decreases, but our estimation error increases also.
+	If $p+1\ll n$, then increasing $p$ via these derived features may
 	be justified if the misspecification error decreases meaningfully.
 	\subsection*{The Design Matrix with Transformed Features}
 	One concern we need to address is whether the matrix $X$ obtained from
@@ -253,7 +253,7 @@ X = cbind(1, x, x^2)
 	Hence, $p(x_1)=p(x_2)=\cdots=p(x_n)=0$. However, since $p$ is a polynomial of degree
 	two, it has at most 2 zeroes. Therefore, if at least $3$ distinct values for the feature
 	$x$ exist in $\mathbb{D}$, it's impossible for $p$ to be zero on all of them.
-	In general we deal with $p + 1 \lll n$, so that we can usually guarantee
+	In general we deal with $p + 1 \ll n$, so that we can usually guarantee
 	$X$ is full rank.
 	
 	In particular, if $X$ has binary features (that is, its values can be only $0$

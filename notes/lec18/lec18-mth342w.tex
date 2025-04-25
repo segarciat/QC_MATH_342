@@ -26,7 +26,7 @@ style=alphabetic
 \newtheorem{theorem}{Theorem}
 \newtheorem{corollary}{Corollary}
 \newtheorem*{example}{Example}
-\newtheorem*{algorithm}{Algorithm}
+\newtheorem{algorithm}{Algorithm}
 
 % Enables using \mathbb{}, for example \mathbb{N} for the set of natural numbers.
 \usepackage{amssymb}
@@ -98,7 +98,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\section*{R Demo}
 	See \verb|QC_MATH_342W_Spring_2025/practice_lectures/lec18.Rmd|.
 	\section*{Tree Models}
-	Suppose we have data set $\mathbb{D}$ with a numeric response (output space
+	Suppose we have a data set $\mathbb{D}$ with a numeric response (output space
 	is $\mathcal{Y}=\mathbb{R}$) and one raw feature ($p = 1$), as depicted in 
 	Figure~\ref{fig:data-set-numeric-response-1-feature}.
 	\begin{figure}
@@ -157,8 +157,14 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\caption{A sinusoidal fit for $\mathbb{D}$ as from Figure~\ref{fig:data-set-numeric-response-1-feature}.}
 		\label{fig:data-set-numeric-response-1-feature-sine}
 	\end{figure}
-	Note that the least square fit for $\mathcal{H}_3$ would not be ``ordinary"
-	(hence we do not call it OLS), since $X^\top X$ would not be invertible.
+	Note that the least squares fit for $\mathcal{H}_3$ would not be ``ordinary"
+	(hence we do not call it OLS), since we cannot create a design matrix $X$
+	and compute $(X^\top X)^{-1}X^\top$ to get the least squares best values
+	$\bm{w}\in \mathbb{R}^4$. We would need to use an optimizer to minimize the
+	objective function
+	\begin{align*}
+		\sum_{i=1}^{n}(y_i - w_0 + w_1\sin(w_2(x_i-w_3)))^2
+	\end{align*}
 	
 	The point of this exercise is to emphasize that when $p = 1$, it is fairly easy
 	to offer $M$ candidate modeling procedures, and to have at least one of them perform
@@ -173,7 +179,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	4 parameters. By non-parametric, we mean that the number of parameters, and
 	the parameter definitions themselves, are \textit{not} pre-specified,
 	but they are fit automatically. It is ``as if" the candidate set expands
-	what is needed. We will study \textbf{tree models}. In particular
+	to what is needed. We will study \textbf{tree models}. In particular
 	\begin{itemize}
 		\item \textbf{Regression trees} for when $\mathcal{Y} = \subseteq \mathbb{R}$ (numerical).
 		\item \textbf{Classification trees} for when $\mathcal{Y} = \{C_1, \ldots, C_L\}$
@@ -182,7 +188,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	Both approaches were published in 1984 by Breiman. We are interested in
 	the \textbf{Classification and Regression Tree Algorithm (CART)}.
 	\section*{Regression Trees}
-	For the sakes of our discussion, we will continue to consider $\mathcal{Y}=\mathbb{R}$
+	For the sake of our discussion, we will continue to consider $\mathcal{Y}=\mathbb{R}$
 	and $p=1$ as in Figure~\ref{fig:data-set-numeric-response-1-feature}. Note
 	that $x\in \mathcal{X}$, where the input (covariate) space $\mathcal{X} = \mathbb{R}$.
 	We can subdivide (partition) it as
@@ -197,7 +203,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{align*}
 	Let's transform $x$ from a one-dimensional interval feature to
 	a $L = 12$-dimensional categorical variable, where each category denotes
-	membership one of the sets $A_\ell$. If $X_{\text{raw}}$ is our raw design
+	membership in one of the sets $A_\ell$. If $X_{\text{raw}}$ is our raw design
 	matrix using the raw interval feature $x$, then after the transformation
 	we get an $n\times L$ matrix $X$(without intercept):
 	\begin{align*}
@@ -214,8 +220,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\mathbb{I}_{x\in A_1} & \mathbb{I}_{x\in A_2} & \cdots & \mathbb{I}_{x\in A_{12}}
 		\end{bmatrix}
 	\end{align*}
-	Note that assuming $n \gg p$ and we have at least one data point in each
-	interval $A_\ell$, $X$ will be full rank. If we fit OLS, and $x_*$
+	Note that if we are assuming that $n \gg p$ and that we have at least one data point in each
+	interval $A_\ell$, $X$ will be full rank. If we fit using OLS, and $x_*$
 	is a new observation (in $\mathcal{X}=\mathbb{R}$), our prediction function
 	would assign the predicted response $\hat{y}_* = \overline{y}_\ell$,
 	corresponding to the mean response of the observations in $\mathbb{D}$
@@ -237,9 +243,9 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		Figure~\ref{fig:data-set-numeric-response-1-feature}.}
 		\label{fig:data-set-numeric-response-1-feature-step}
 	\end{figure}
-	There is a hyperparameter in this procedure namely, the size of each interval,
+	There is a hyperparameter in this procedure, namely, the size of each interval,
 	or equivalently, the number of bins (here 12). This model might not beat
-	$\mathcal{H}_3$, but it might do better than $\mathcal{H}_2$ and $\mathcal{H}_3$.
+	$\mathcal{H}_3$, but it might do better than $\mathcal{H}_1$ and $\mathcal{H}_2$.
 	To select the number of bins, we can use model procedure setting III that we discussed
 	last lecture. Note that if you use 1 bin, you have the null model $g_0$,
 	and if you use $n$ bins (where $n$ is the number of data points), you overfit.
@@ -247,8 +253,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	When $p = 1$, there is no much downside to using this approach. What if $p$ is large?
 	The Boston Housing data set, for example, has $n = 506$ and $p = 13$. If there
 	are 5 bins per feature, then the total number of bins explode exponentially
-	to $5^{13}\approx 1.22 \text{billion}$. We will have many empty bins in this
-	case. This is called \textbf{the course of dimensionality}, i.e., the number
+	to $5^{13}\approx 1.22 \text{ billion}$. We will have many empty bins in this
+	case. This is called \textbf{the curse of dimensionality}, i.e., the number
 	of parameters grows exponentially with $p$, which is $\gg n$. We will have
 	approximately 1.22 billion columns, most consisting only of zeros. In summary,
 	this procedure does not extend well to multiple features.
@@ -270,8 +276,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		all of $\mathbb{R}^2$. In Figure~\ref{fig:dynamic-split-interval-data},
 		this was achieved with the line $x_2 = 4$.
 		\item \textbf{Step 2}: Find the best three-bin model by
-		splitting all a previous bin into two bins. In
-		Figure~\ref{fig:dynamic-split-interval-data},, this was achieved
+		splitting a previous bin into two bins. In
+		Figure~\ref{fig:dynamic-split-interval-data}, this was achieved
 		with the line $x_1 = 7$.
 		\item \textbf{Step 3}: Find the best four-bin model by splitting a previous
 		bin into two bins (not depicted in
@@ -291,11 +297,13 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{itemize}
 		\item In a rooted tree, there is a node designated as the \textbf{root},
 		which is the ancestor of all other nodes. In Figure~\ref{fig:regression-tree},
-		it corresponds to $x_2 \leq 4$.
+		it corresponds to the node with $x_2 \leq 4$.
 		\item A node may have \textbf{descendants}. A node that has an immediate
 		descendant is called a \textbf{parent} node, and its immediate descendants
 		are called \textbf{children} nodes.
 		\item A node in a tree without any children is called a \textbf{leaf}.
+		The leaves in our example correspond to the nodes with $\hat{y}=10.5$, $\hat{y}=55$,
+		and $\hat{y}=10.5$.
 		\item In a \textbf{binary tree}, each node may have at most 2 children.
 	\end{itemize}
 	Since we have three bins in our example, there are three values we can predict
@@ -305,24 +313,26 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	If instead $\bm{x}_* = [x_1 \  x_2] = [6 2]$, then $x_2\leq 4$ and $x_1\leq 4$,
 	so we predict $\hat{y}_* = 55$.
 	
-	The usage of orthogonal axes in Figure~\ref{fig:data-set-2-features-dynamic-split-tree}
-	is depicted by the fact that the lines use to partition the plane are parallel
+	The usage of orthogonal axes in Figure~\ref{fig:dynamic-split-interval-data}
+	is depicted by the fact that the lines used to partition the plane are parallel
 	to the coordinate axes. Alternatives have been investigated, but it is hard
 	to beat random forests and it can be hard to interpret.
 	
 	Let's state the regression algorithm more fully.
 	\begin{tcolorbox}[breakable]
 		\begin{algorithm}[Regression Tree Algorithm]
+			
+			\label{alg:regression-tree-alg}
 			Start with $\mathbb{D}$. Let $x_{(i)}$ denote the $i$th smallest
 			value in a vector $\bm{u}$.
 			\begin{enumerate}[label=(\arabic*)]
 				\item Let $\bm{x}_k$ denote the $k$th vector, for $1\leq k\leq p$,
-				containing all possible values for the $n$th feature.
+				containing all $n$ possible values for the $k$th feature.
 				Let's consider every possible orthogonal-to-axis split, i.e:
 				\begin{align*}
 					x_1&\leq \bm{x}_{\cdot 1(1)}, x_1 \leq \bm{x}_{\cdot 1(2)}, \ldots, x_1 \leq \bm{x}_{\cdot 1(n-1)}\\
-					x_2&\leq \bm{x}_{\cdot 2(1)}, x_1 \leq \bm{x}_{\cdot 1(2)}, \ldots, x_2 \leq \bm{x}_{\cdot 2(n-1)}\\
-					x_p&\leq \bm{x}_{\cdot p(1)}, x_1 \leq \bm{x}_{\cdot 1(2)}, \ldots, x_p \leq \bm{x}_{\cdot p(n-1)}\\
+					x_2&\leq \bm{x}_{\cdot 2(1)}, x_2 \leq \bm{x}_{\cdot 2(2)}, \ldots, x_2 \leq \bm{x}_{\cdot 2(n-1)}\\
+					x_p&\leq \bm{x}_{\cdot p(1)}, x_p \leq \bm{x}_{\cdot p(2)}, \ldots, x_p \leq \bm{x}_{\cdot p(n-1)}\\
 				\end{align*}
 				This means we have $n\cdot (p-1)$ possible splits. Note we do not
 				consider, for example, $x_1\leq \bm{x}_{\cdot 1(n)}$,
@@ -337,23 +347,74 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				where $n_L$ is the number of observations in the left child,
 				$n_R$ is the number of observations in the right child, $SSE_L$
 				is the $SSE$ in the left child, and $SSR_R$ is the $SSE$ in
-				the right child. Note that since we fitting a local optimization
+				the right child. Note that since we are fitting a local
 				optimization by picking the \textit{best} split each time, this
 				algorithm $\mathcal{A}$ is \textit{greedy}.
 				\item Repeat steps (1) and (2) on the subset of $\mathbb{D}$
 				consisting of all the daughter nodes. Note that we can make
 				at most $n$ splits, otherwise we will have $n$ dummies and we
-				would surely overfit. Therefore, stop when a child node
-				has below a threshold for $N_0$ nodes (default $N_0 = 5$).
+				would surely overfit. Therefore, stop when the number of points
+				in a child node is below some threshold $N_0$ (default $N_0 = 5$).
 			\end{enumerate}
 		\end{algorithm}
 	\end{tcolorbox}
 	\section*{Classification Trees}
 	Let $\mathcal{Y} = \{C_1, \ldots, C_L\}$ (categorical response space).
-	We apply the same algorithm as in regression trees, except in step (3)
-	we default to $N_0 = 1$ (possibly because there are only $L$ levels).
+	The classification tree algorithm is similar to Algorithm~\ref{alg:regression-tree-alg},
+	but differs a bit in steps 2 and 3.
+	
+	\begin{tcolorbox}[breakable]
+		\begin{algorithm}[Classification Tree Algorithm]\label{alg:classification-tree-alg}
+			Start with $\mathbb{D}$. Let $x_{(i)}$ denote the $i$th smallest
+			value in a vector $\bm{u}$.
+			\begin{enumerate}[label=(\arabic*)]
+				\item Let $\bm{x}_k$ denote the $k$th vector, for $1\leq k\leq p$,
+				containing all $n$ possible values for the $k$th feature.
+				Let's consider every possible orthogonal-to-axis split, i.e:
+				\begin{align*}
+					x_1&\leq \bm{x}_{\cdot 1(1)}, x_1 \leq \bm{x}_{\cdot 1(2)}, \ldots, x_1 \leq \bm{x}_{\cdot 1(n-1)}\\
+					x_2&\leq \bm{x}_{\cdot 2(1)}, x_2 \leq \bm{x}_{\cdot 2(2)}, \ldots, x_2 \leq \bm{x}_{\cdot 2(n-1)}\\
+					x_p&\leq \bm{x}_{\cdot p(1)}, x_p \leq \bm{x}_{\cdot p(2)}, \ldots, x_p \leq \bm{x}_{\cdot p(n-1)}\\
+				\end{align*}
+				This means we have $n\cdot (p-1)$ possible splits. Note we do not
+				consider, for example, $x_1\leq \bm{x}_{\cdot 1(n)}$,
+				or $x_2\leq \bm{x}_{\cdot 2(n)}$, and so on because such a split
+				would have \textit{all} data on one side of the split, and hence
+				there is no split at all.
+				\item Pick the best split, i.e., the one with the lowest error.
+				We need a new error metric because $SSE$ is not appropriate for
+				a categorical response. Define the \textbf{Gini} error metric:
+				\begin{align*}
+					G_{\text{neighbor, avg}} = \frac{n_L G_L + n_R G_R}{n_L + n_R}
+				\end{align*}
+				where $n_L$ is the number of observations in the left child,
+				$n_R$ is the number of observations in the right child.
+				We get something similar to $SSE$ by defining
+				\begin{align*}
+					G := \sum_{l=1}^{L}\hat{p}_\ell(1 - \hat{p}_\ell)
+				\end{align*}
+				where $\hat{p}_\ell$ is the proportion of observations of whose response
+				is category $\ell$ in a given node:
+				\begin{align*}
+					\hat{p}_\ell := \frac{
+						\text{number of observations with category $\ell$ in node}}
+					{\text{total number of observations in node}}
+				\end{align*}
+				Note that since we fitting a local optimization by picking
+				the \textit{best} split each time, this algorithm $\mathcal{A}$ 
+				is \textit{greedy}.
+				\item Repeat steps (1) and (2) on the subset of $\mathbb{D}$
+				consisting of all the daughter nodes. Note that we can make
+				at most $n$ splits, otherwise we will have $n$ dummies and we
+				would surely overfit. Therefore, stop when the number of points
+				in a child node is below some threshold (default $N_0=1$,
+				possibly because there are only $L$ levels).
+			\end{enumerate}
+		\end{algorithm}
+	\end{tcolorbox}
 	See Figure~\ref{fig:dynamic-split-categorical-data} and
-	Figure~\ref{fig:classification-tree}.
+	Figure~\ref{fig:classification-tree} for an example of applying
+	Algorithm~\ref{alg:classification-tree-alg}.
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.4\textwidth]{dynamic-split-categorical-data}
@@ -367,22 +428,6 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			Figure~\ref{fig:dynamic-split-categorical-data}.}
 		\label{fig:classification-tree}
 	\end{figure}
-	Also, we need a new error metric in (2) because $SSE$ is not appropriate for
-	a categorical response. Define the \textbf{Gini} error metric:
-	\begin{align*}
-		G_{\text{neighbor, avg}} = \frac{n_L G_L + n_R G_R}{n_L + n_R}
-	\end{align*}
-	We get something similar to $SSE$ by defining
-	\begin{align*}
-		G := \sum_{l=1}^{L}\hat{p}_\ell(1 - \hat{p}_\ell)
-	\end{align*}
-	where $\hat{p}_\ell$ is the proportion of observations of who response
-	is category $\ell$ in a given node:
-	\begin{align*}
-		\hat{p}_\ell := \frac{
-		\text{number of observations with category $\ell$ in node}}
-		{\text{total number of observations in node}}
-	\end{align*}
 	The larger $G$ is, the more heterogeneous the node is. For example, if the
 	node has all $A$'s, then $\hat{p}_A = \hat{p}_B = \hat{p}_C = 0$, and
 	hence $G=0$ for that node.
