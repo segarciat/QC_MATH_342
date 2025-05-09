@@ -99,13 +99,13 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\subsection{Listwise Deletion}
 	The most naive (simple) approach for handling missingness is \textbf{listwise deletion},
 	which involves dropping all rows that have missingness. This may be alright if
-	a ``trivial" amount of data is missing. However, this there is ``a lot" of missingness,
+	a ``trivial" amount of data is missing. However, if there is ``a lot" of missingness,
 	listwise deletion can introduce errors in our predictive model.
 	
 	The first type of error is estimation error because there is less data,
-	which an also make us more likely to overfit. But that is not all; if
+	which can also make us more likely to overfit. But that is not all; if
 	there is a pattern to the missing data, then the predictive model is
-	prone to poor extrapolation, likely due ot \textbf{sampling bias}.
+	prone to poor extrapolation, likely due to \textbf{sampling bias}.
 	For example, one of our features may be age, and it could be that the
 	units that are missing correspond to senior-aged individuals
 	(see Figure~\ref{fig:model-after-listwise-deletion}).
@@ -146,7 +146,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	
 	The solution is to \textbf{impute} all $x_{ij}$ that are missing. Let
 	$\mathcal{M}$ be the set of feature indices that contain missingness
-	in some unit. We \textit{predict} values the missing $x_{ij}$ by viewing
+	in some unit. We \textit{predict} the missing $x_{ij}$ by viewing
 	$\bm{x}_{\cdot, j}$, the $j$th column (which has all $n$ values for the $j$th feature)
 	as the response; we use $\bm{x}_{\cdot, -j}$ (all other features besides the
 	$j$th feature) and $\bm{y}$ as the inputs. This yields an \textbf{imputed design matrix}
@@ -193,10 +193,14 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\right)
 	\end{align*}
 	This is the most general mechanism. Notice the probability depends on $x_{ij}$ too,
-	the missing value itself. Here, $\vec{U}$ are the features that are unknown.
+	the missing value itself. Here, $\vec{U}$ refers to reasons for why the data
+	is missing. The data is not missing at random; we just do not why it is missing.
+	That is, it is as if we do not have enough features to know why it is
+	missing, so it is a form of ignorance, since we cannot explain it
+	with the information we have.
 	\begin{tcolorbox}[breakable]
 		\begin{example}
-			Suppose you are the $i$th candidate filling out a survey, and on the
+			Suppose you are the $i$th candidate filling out a survey, and the
 			$j$th question asks whether you spent time in jail, which you decide
 			not to answer.
 		\end{example}
@@ -222,7 +226,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			second to the 7th feature, and the third to th 11th feature.
 		\end{example}
 	\end{tcolorbox}
-	Entry $M_{ij}$ is $1$ if $x_{ij}$ is missing, and is zero otherwise,
+	Entry $M_{ij}$ is $1$ if $x_{ij}$ is missing, and is zero otherwise.
 	We treat the columns of $M$ as features and augment matrix $X$
 	to $[X \mid M]$. Then we impute on that:
 	\begin{align*}
@@ -233,7 +237,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		g = \mathcal{A}(\langle [X_{\text{mp}}, M], \bm{y}\rangle, \mathcal{H})
 	\end{align*}
 	The idea is that knowing a feature is missing may carry more information
-	than the value of the feature itself had it been present.
+	than the value of the feature itself, had it been present.
 	\begin{tcolorbox}
 		\begin{example}
 			 For example,

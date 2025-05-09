@@ -104,7 +104,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	to estimate $\mu_X$ and $\bar{y}$ seeks to estimate $\mu_Y$. The quantity $S_{xy}$
 	estimates the \emph{covariance} of $x$ and $y$, given by
 	\begin{align*}
-		Cov[X, Y] := E[(X-\mu_X)(Y-\mu_Y)]
+		Cov[X, Y] := \mathbb{E}[(X-\mu_X)(Y-\mu_Y)]
 	\end{align*}
 	where $X$ and $Y$ are random variables, $\mu_X$ and $\mu_Y$ are their respective means,
 	and $E$ is used to compute the expectation. Though not a core part of this course, we
@@ -281,9 +281,9 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	Let $E_0$ be a random variable for the residuals of the null model $g_0$,
 	and consider the variance $\sigma_0^2$ of $E_0$:
 	\begin{align*}
-		\sigma_{0}^2 := \text{Var}[E_0] := E[(E_0-\mu_{E_0}^2)]
+		\sigma_{0}^2 := \text{Var}[E_0] := \mathbb{E}[(E_0-\mu_{E_0}^2)]
 	\end{align*}
-	where $E[\cdot]$ stands for expectation, and $\mu_{E_0}$ stands for the mean
+	where $\mathbb{E}[\cdot]$ stands for expectation, and $\mu_{E_0}$ stands for the mean
 	of $E_0$. As we've seen, the variance is estimated by $S^2_{e_0}$
 	(where now we use lowercase $e_0$ for the \emph{realization} of the
 	random variable $E_0$). By Corollary~\ref{coroally:zero-mean-residuals}, we
@@ -305,15 +305,15 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			Given a finite sequence of values $(y_i)_{i=1}^{n}$ with average $\overline{y}$,
 			the \textbf{sum of squared totals}, or SST, is defined by
 			\begin{align*}
-				SST := SSE_0 = \sum_{i=1}^{n}(y_i-\bar{y})
+				SST := SSE_0 = \sum_{i=1}^{n}(y_i-\bar{y})^2
 			\end{align*}
 			The $SST$ is the $SSE$ of the null model $g_0$.
 		\end{definition}
 	\end{tcolorbox}
 	Now let $E_g$ be the random variable for the residuals of the least square model $g$.
-	Once again, we consider the variance in $E$
+	Once again, we consider the variance in $E_g$
 	\begin{align*}
-		\sigma_{E_g}^2 := \text{Var}[E_g] := E[(E-\mu_{E_g}^2)]
+		\sigma_{E_g}^2 := \text{Var}[E_g] := \mathbb{E}[(E_g-\mu_{E_g}^2)]
 	\end{align*}
 	which is estimated by $S_{e_g}^2$ (noticed again lowercase $e_g$ for the realization of $E_g$)
 	\begin{align*}
