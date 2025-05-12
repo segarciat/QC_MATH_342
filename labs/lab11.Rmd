@@ -1,0 +1,612 @@
+---
+title: "Lab 11"
+author: "Sergio E. Garcia Tapia"
+output: pdf_document
+---
+
+
+# Asymmetric Cost Modeling, ROC and DET curves
+
+Load the adult dataset and impute the missing data using the `missForest` package.
+
+```{r}
+pacman::p_load_gh("coatless/ucidata")
+data(adult)
+n = nrow(adult)
+
+pacman::p_load(skimr)
+skim(adult)
+
+# Make character columns into factors.
+pacman::p_load(missForest, dplyr)
+adult = adult %>%
+  mutate_if(is.character, as.factor)
+
+?missForest
+# Impute, and binarize response.
+adult_imp = missForest(adult)$ximp
+adult_imp$income = ifelse(adult$income == ">50K", 1, 0)
+?na.omit
+```
+
+Then sample training and testing sets each of size 2,000:
+
+```{r}
+set.seed(1984)
+n_subset = 2000
+
+# Sample until all levels of all factors are represented in the training set.
+all_represented = FALSE
+while (!all_represented) {
+  index_train = sample.int(n, n_subset, replace = FALSE)
+  adult_train = adult_imp[index_train,]
+  
+  
+  all_represented = TRUE
+  for (j in 1 : ncol(adult_train)) {
+    col = adult_train[, j]
+    if (!is.factor(col)) {
+      next
+    }
+    
+    if (n_unique(col) != length(levels(col))) {
+      all_represented = FALSE
+      break
+    }
+  }
+}
+
+index_test = setdiff(1 : n, index_train)
+adult_test = adult_imp[index_test,]
+```
+
+
+Fit a logistic regression model to the adult_train missingness-imputed data.
+
+```{r}
+logistic_mod = glm(income ~ ., data = adult_train, family = "binomial")
+p_hats_train = predict(logistic_mod, adult_train, type = "response")
+p_hats_test = predict(logistic_mod, adult_test, type = "response")
+```
+
+Use the function from class to calculate all the error metrics (misclassification error, precision, recall, F1, FDR, FOR) for the values of the probability threshold being 0.001, 0.002, ..., 0.999 in a tibble (dplyr data frame).
+
+```{r}
+pacman::p_load(tidyverse)
+
+# -------------------- Function from class (lec23.Rmd) ------------------------
+
+#' Computes performance metrics for a binary probabilistic classifer
+#'
+#' Each row of the result will represent one of the many models and its elements record the performance of that model so we can (1) pick a "best" model at the end and (2) overall understand the performance of the probability estimates a la the Brier scores, etc.
+#'
+#' @param p_hats  The probability estimates for n predictions
+#' @param y_true  The true observed responses
+#' @param res     The resolution to use for the grid of threshold values (defaults to 1e-3)
+#'
+#' @return        The matrix of all performance results
+compute_metrics_prob_classifier = function(p_hats, y_true, res = 0.001){
+  #we first make the grid of all prob thresholds
+  p_thresholds = seq(0 + res, 1 - res, by = res) #values of 0 or 1 are trivial
+  
+  #now we create a matrix which will house all of our results
+  performance_metrics = matrix(NA, nrow = length(p_thresholds), ncol = 12)
+  colnames(performance_metrics) = c(
+    "p_th",
+    "TN",
+    "FP",
+    "FN",
+    "TP",
+    "miscl_err",
+    "precision",
+    "recall",
+    "FDR",
+    "FPR",
+    "FOR",
+    "miss_rate"
+  )
+  
+  #now we iterate through each p_th and calculate all metrics about the classifier and save
+  n = length(y_true)
+  for (i in 1 : length(p_thresholds)){
+    p_th = p_thresholds[i]
+    y_hats = factor(ifelse(p_hats >= p_th, 1, 0))
+    confusion_table = table(
+      factor(y_true, levels = c(0, 1)),
+      factor(y_hats, levels = c(0, 1))
+    )
+      
+    fp = confusion_table[1, 2]
+    fn = confusion_table[2, 1]
+    tp = confusion_table[2, 2]
+    tn = confusion_table[1, 1]
+    npp = sum(confusion_table[, 2])
+    npn = sum(confusion_table[, 1])
+    np = sum(confusion_table[2, ])
+    nn = sum(confusion_table[1, ])
+  
+    performance_metrics[i, ] = c(
+      p_th,
+      tn,
+      fp,
+      fn,
+      tp,
+      (fp + fn) / n,
+      tp / npp, #precision
+      tp / np,  #recall
+      fp / npp, #false discovery rate (FDR)
+      fp / nn,  #false positive rate (FPR)
+      fn / npn, #false omission rate (FOR)
+      fn / np   #miss rate
+    )
+  }
+  
+  #finally return the matrix
+  performance_metrics
+}
+```
+
+
+```{r}
+asymmetric_predictions_results = as_tibble(
+  compute_metrics_prob_classifier(p_hats_train, adult_train$income)
+)
+asymmetric_predictions_results
+```
+
+Calculate the column `total_cost` and append it to this data frame via `mutate`.
+
+```{r}
+pacman::p_load(magrittr)
+c_FP = 200
+c_FN = 1000
+asymmetric_predictions_results %<>%
+  mutate(total_cost = c_FP * FP + c_FN * FN)
+head(asymmetric_predictions_results)
+```
+
+Which is the lowest total cost? What is the "winning" probability threshold value providing that minimum total cost?
+
+```{r}
+idx_min_total_cost = which.min(asymmetric_predictions_results$total_cost)
+cat("The lowest total cost is", asymmetric_predictions_results$total_cost[idx_min_total_cost], "\n")
+cat("Corresponding probability threshold:", asymmetric_predictions_results$p_th[idx_min_total_cost], "\n")
+```
+
+Plot an ROC curve in-sample and interpret.
+
+```{r}
+ggplot(asymmetric_predictions_results) +
+  geom_line(aes(x = FPR, y = recall, col = p_th)) +
+  scale_colour_gradientn(colours = rainbow(5)) +
+  coord_fixed() +
+  xlim(0, max(asymmetric_predictions_results$FPR)) +
+  ylim(0, max(asymmetric_predictions_results$recall)) +
+  ggtitle("In-sample ROC curve for adult data set", subtitle = "n = 2000 units")
+```
+## Solution
+
+False Positive Rate (FPR) and Recall are both functions of the probability
+threshold `p_th`. Therefore, each point on the curve, of form (FPR, Recall),
+corresponds to a different `p_th` value. Recall is given by $\frac{TP}{P}$,
+measuring the proportion of positives that our model successfully spotted.
+FPR is given by $\frac{FP}{N}$, answering the question ``what proportion of
+the negative responses did the model missclassify as positive?" We want a model
+with high recall and low FPR. The curve depicts the trade-off, where the recall
+is high for low $p_th$, and it decreases as $p_th$ increases; meanwhile,
+the FPR starts low, but increases as $p_th$ increases. This makes sense since
+a high $p_th$ value means the model tries to be more sure because guessing
+$1$.
+
+Calculate AUC in-sample and interpret.
+
+```{r}
+pacman::p_load(pracma)
+-trapz(asymmetric_predictions_results$FPR, asymmetric_predictions_results$recall)
+```
+
+## Solution
+
+An area under the curve of 0.5 indicates the area of the naive model, where
+probabilities `p_hats` are chosen from a uniform distribution $U(0, 1)$
+(effectively at random). Since our model's area under the curve moderately
+exceeds 0.5, its predictive value is likely nontrivial, but not extraordinary.
+
+Plot a DET curve in-sample and interpret.
+
+```{r}
+asymmetric_predictions_results %<>%
+  mutate(FNR = FN / (FN + TP))
+head(asymmetric_predictions_results)
+ggplot(asymmetric_predictions_results) +
+  geom_line(aes(x = FNR, y = FPR, col = p_th)) +
+  scale_colour_gradientn(colours = rainbow(5)) +
+  coord_fixed() + 
+  xlim(0, max(asymmetric_predictions_results$FNR)) + 
+  ylim(0, max(asymmetric_predictions_results$FPR))
+```
+
+According to [this source](https://docs.kolena.com/metrics/fnr/),
+FNR is defined as
+
+$$
+FNR = \frac{FN}{FN + TP}
+$$
+
+The plot shows there is a tradeoff between FPR and FNR. As `p_th` increases,
+FNR increases while FPR increases. This makes sense since an increase in
+`p_th` means our model needs to be more sure before predicting `1`. Therefore
+there will be less predicted positives overall, and hence less false positives.
+Meanwhile, the higher number of predicted negatives will mean a higher false
+negative rate.
+
+
+```{r}
+ggplot(asymmetric_predictions_results) +
+  geom_line(aes(x = FDR, y = FOR, col = p_th)) +
+  scale_colour_gradientn(colours = rainbow(5)) +
+  coord_fixed() + 
+  xlim(0, max(asymmetric_predictions_results$FDR)) + 
+  ylim(0, max(asymmetric_predictions_results$FOR))
+```
+
+## Solution
+
+False Discovery Rate (FDR) and False Omission Rate (FOR) are both functions of
+the probability threshold value `p_th`. Therefore, each point on the curve,
+of form (FDR, FOR), corresponds to a different `p_th` value. There is a tradeoff
+between FOR and FDR as `p_th` changes. For low values of `p_th`, FDR is
+relatively high and FOR is relatively low, and as `p_th` increases, FDR
+increases while FOR increases.
+
+
+Plot an ROC curve oos and interpret.
+
+```{r}
+# Compute the oos metrics
+asymmetric_predictions_results_oos = as_tibble(
+  compute_metrics_prob_classifier(p_hats_test, adult_test$income)
+)
+head(asymmetric_predictions_results_oos)
+```
+
+```{r}
+ggplot(asymmetric_predictions_results_oos) +
+  geom_line(aes(x = FPR, y = recall, col = p_th)) +
+  scale_colour_gradientn(colours = rainbow(5)) +
+  coord_fixed() +
+  xlim(0, max(asymmetric_predictions_results$FPR)) +
+  ylim(0, max(asymmetric_predictions_results$recall)) +
+  ggtitle("Out-of-sample ROC curve for adult data set")
+```
+
+## Solution
+
+Similar to the in-sample curve, the model seems to perform better than the
+naive one out-of-sample.
+
+Calculate AUC oos and interpret.
+
+```{r}
+-trapz(asymmetric_predictions_results_oos$FPR, asymmetric_predictions_results_oos$recall)
+```
+
+## SOlution
+
+The model performs slightly worse out-of-sample than in-sample, but as inferred
+from the ROC curve, it still does better than the naive model
+
+Plot a DET curve oos and interpret.
+
+```{r}
+asymmetric_predictions_results_oos %<>%
+  mutate(FNR = FN / (FN + TP))
+head(asymmetric_predictions_results_oos)
+ggplot(asymmetric_predictions_results_oos) +
+  geom_line(aes(x = FNR, y = FPR, col = p_th)) +
+  scale_colour_gradientn(colours = rainbow(5)) +
+  coord_fixed() + 
+  xlim(0, max(asymmetric_predictions_results_oos$FNR)) + 
+  ylim(0, max(asymmetric_predictions_results_oos$FPR))
+```
+
+## Solution
+
+The interpretation is the same as before.
+
+```{r}
+ggplot(asymmetric_predictions_results_oos) +
+  geom_line(aes(x = FDR, y = FOR, col = p_th)) +
+  scale_colour_gradientn(colours = rainbow(5)) +
+  coord_fixed() + 
+  xlim(0, max(asymmetric_predictions_results$FDR)) + 
+  ylim(0, max(asymmetric_predictions_results$FOR))
+```
+
+## Solution
+
+The interpretation is nearly the same as before, though for small values of
+`p_th`, there's a turning point (which I cannot quite explain).
+
+#Boosting
+
+We will make use of YARF's tree-fitting method so here's the boilerplate code to load it once again:
+
+```{r}
+options(java.parameters = "-Xmx8000m")
+pacman::p_load(rJava)
+if (!pacman::p_isinstalled(YARF)){
+  pacman::p_install_gh("kapelner/YARF/YARFJARs", ref = "dev")
+  pacman::p_install_gh("kapelner/YARF/YARF", ref = "dev", force = TRUE)
+}
+pacman::p_load(YARF)
+```
+
+We will now write a gradient boosting algorithm from scratch. We will make it as general as possible for regression and classification.
+
+```{r}
+pacman::p_load(checkmate) #this is a package that enforces arguments are the correct form
+
+#' Gradient boosting
+#'
+#' Generates a gradient boosting model based on your choices of base learner and objective function
+#' 
+#' @param X                         A data frame representing the features. It is of size n x p. No need for an intercept column.
+#' @param y                         A vector of length n. It either will be real numbers (for regression) or binary (for classification).
+#' @param g_base_learner_alg        A function with arguments X, y and ... and returns a function that takes X as an argument. The default is YARFCART with nodesize 10% of the total length.
+#' @param neg_grad_objective_function   The negative gradient of the function to be minimized. It takes arguments y, yhat that returns a vector. The default objective function is SSE for regression and logistic loss for classification.
+#' @param M                         The number of base learners to be summed. Default is 50 for regression and 100 for classification.
+#' @param eta                       The step size in the gradient descent. Default is 0.3
+#' @param verbose                   Messages are printed out during construction. Default is TRUE.
+#' @param ...                       Optional arguments to be passed into the g_base_learner_alg function.
+#'
+#' @return                          A "qc_basement_gbm" gradient boosting model which can be used for prediction
+qc_basement_gbm = function(X, y, g_base_learner_alg = NULL, neg_grad_objective_function = NULL, M = NULL, eta = 0.3, verbose = TRUE, ...){
+  assert_data_frame(X)
+  n = nrow(X)
+  assert_numeric(y)
+  assert(length(y) == n)
+  assert_function(g_base_learner_alg, args = c("X", "y"), null.ok = TRUE)
+  if (is.null(g_base_learner_alg)){
+    g_base_learner_alg = function(X0, y0){
+      #we want some bias in the base learner - so default to 10% of the sample size
+      YARFCART(X0, y0, nodesize = round(.1 * nrow(X0)), calculate_oob_error = FALSE, bootstrap_indices = list(1 : nrow(X0)), verbose = FALSE)
+    }
+  }
+  assert_function(neg_grad_objective_function, args = c("y", "yhat"), null.ok = TRUE)
+  assert_count(M, positive = TRUE, null.ok = TRUE)
+  assert_numeric(eta, lower = .Machine$double.eps)
+  assert_logical(verbose)
+  
+  g_0 = function(X_star){
+    rep(mean(y), nrow(X_star))
+  }
+  if (identical(sort(names(table(y))), c("0", "1"))){
+    model_type = "probability_estimation"
+    if (verbose){cat("building gradient boosted model for probability estimation of two classes\n")}
+    if (is.null(M)){
+      M = 100
+    }
+    if (is.null(neg_grad_objective_function)){
+      neg_grad_objective_function = function(y, yhat){
+        y - yhat # "residual"; yhat is really p_hat in this setting
+      }
+    }
+  } else {
+    model_type = "regression"
+    if (verbose){cat("building gradient boosted model for regression\n")}
+    if (is.null(M)){
+      M = 50
+    }
+    if (is.null(neg_grad_objective_function)){
+      neg_grad_objective_function = function(y, yhat){
+        2 * (y - yhat) # residual
+      }
+    }
+  }
+
+  #these are the partial function fits where G_{t+1} = G_t + eta * gtilde_t
+  g_tildes = list() 
+  #this is the running tally of the sum of the yhats at each iteration
+  cumul_y_hat_m = g_0(X)
+  for (m in 1 : M) {
+    if (verbose){cat("fitting base learner", m, "of", M, "\n")}
+    # Treat -grad[Loss(y, accum_y_hat)] as response, and fit to X.
+    g_tildes[[m]] = g_base_learner_alg(X, neg_grad_objective_function(y, cumul_y_hat_m))
+    cumul_y_hat_m = cumul_y_hat_m + eta * predict(g_tildes[[m]], X)
+  }
+  
+  gbm = list(
+    M = M, 
+    eta = eta,
+    X = X, 
+    y = y, 
+    model_type = model_type,
+    neg_grad_objective_function = neg_grad_objective_function, 
+    g_base_learner_alg = g_base_learner_alg,
+    g_0 = g_0,
+    g_tildes = g_tildes
+  )
+  class(gbm) = "qc_basement_gbm"
+  gbm
+}
+
+#' Compute all iterative boosting predictions
+#' 
+#' Returns all predictions for each iteration of the gradient boosting
+#'
+#' @param gbm     A gradient boosting model of class "qc_basement_gbm"
+#' @param X_star  The data to predict for (as a data frame). It has n_* rows and p columns
+#'
+#' @return        A matrix with n_* rows and M+1 columns where each column are the iterative
+#'                predictions across all base learners beginning with g_0. For regression, the
+#'                unit is in the units of the original response. For probability estimation for 
+#'                binary response, the unit is the logit of the probability estimate.
+qc_basement_gbm_all_predictions = function(gbm, X_star){
+  assert_class(gbm, "qc_basement_gbm")
+  assert_data_frame(X_star)
+  
+  all_y_hat_star = matrix(NA, nrow = nrow(X_star), ncol = gbm$M + 1)
+  all_y_hat_star[, 1] = gbm$g_0(X_star)
+  for (m in 1 : gbm$M){
+    all_y_hat_star[, m + 1] = all_y_hat_star[, m] + gbm$eta * predict(gbm$g_tildes[[m]], X_star)
+  } 
+  all_y_hat_star
+}
+
+
+#' GBM Predict
+#' 
+#' Returns final predictions for the gradient boosting model
+#'
+#' @param gbm     A gradient boosting model of class "qc_basement_gbm"
+#' @param X_star  The data to predict for (as a data frame). It has n_* rows and p columns
+#'
+#' @return        A vector of length n_* rows with each row's predictions. For regression, the
+#'                unit is in the units of the original response. For probability estimation for 
+#'                binary response, the unit is the logit of the probability estimate.
+qc_basement_gbm_predict = function(gbm, X_star){
+  y_hat_star = gbm$g_0(X_star)
+  for (m in 1 : gbm$M) {
+    y_hat_star = y_hat_star + gbm$eta * predict(gbm$g_tildes[[m]], X_star)
+  }
+  y_hat_star
+  #rowSums(qc_basement_gbm_all_predictions(gbm, X_star))
+}
+```
+
+Now we test the code in-sample:
+
+```{r}
+set.seed(1)
+n = 100
+p = 3
+X = matrix(rnorm(n * p), nrow = n)
+bbeta = seq(-1, 1, length.out = p)
+y = c(X %*% bbeta + rnorm(n))
+y_binary = rbinom(n, 1, 1 / (1 + exp(-X %*% bbeta)))
+X = data.frame(X)
+
+#regression
+g_b = qc_basement_gbm(X, y, verbose = FALSE)
+pacman::p_load(ggplot2)
+ggplot(data.frame(y = y, yhat = qc_basement_gbm_predict(g_b, X))) + aes(x = y, y = yhat) + geom_point()
+y_hats_by_m = qc_basement_gbm_all_predictions(g_b, X)
+rmses_by_m = apply(y_hats_by_m, 2, function(yhat){sqrt(mean((y - yhat)^2))})
+rmses_by_m
+
+#probability estimation
+g_b = qc_basement_gbm(X, y_binary, verbose = FALSE)
+table(y_binary, as.numeric(qc_basement_gbm_predict(g_b, X) > 0))
+y_hats_by_m = qc_basement_gbm_all_predictions(g_b, X) > 0
+miscl_err_by_m = apply(y_hats_by_m, 2, function(yhat){mean(y_binary != yhat)})
+miscl_err_by_m
+```
+
+Here is code to split up the diamonds dataset into three subsets:
+
+```{r}
+set.seed(1)
+diamonds = ggplot2::diamonds
+pacman::p_load(tidyverse)
+diamonds = diamonds %>% 
+  mutate(cut = factor(cut, ordered = FALSE)) %>%
+  mutate(color = factor(color, ordered = FALSE)) %>%
+  mutate(clarity = factor(clarity, ordered = FALSE))
+diamonds_mm = model.matrix(price ~ ., diamonds)
+train_size = 2000
+train_indices = sample(1 : nrow(diamonds), train_size)
+
+y_train = diamonds[train_indices, ]$price
+X_train = diamonds_mm[train_indices, ]
+
+validation_size = 2000
+validation_indices = sample(setdiff(1 : nrow(diamonds), train_indices), validation_size)
+y_validation = diamonds[validation_indices, ]$price
+X_validation_mm = diamonds_mm[validation_indices, ]
+
+test_size = 2000
+test_indices = sample(setdiff(1 : nrow(diamonds), c(train_indices, validation_indices)), test_size)
+y_test = diamonds[test_indices, ]$price
+X_test_mm = diamonds_mm[test_indices, ]
+```
+
+Using your new gradient boosting function, optimize the number of base learners, M for the diamonds data using a grid search:
+
+```{r}
+M_grid = c(5, 10, 15, 20)
+rmse_by_M = array(NA, dim = length(M_grid))
+for (i in 1 : length(M_grid)) {
+  cat("*************** M =", M_grid[i], "***************\n")
+  diamonds_g_b = qc_basement_gbm(data.frame(X_train), y_train, M = M_grid[i], verbose = FALSE)
+  y_hats_validation = qc_basement_gbm_predict(diamonds_g_b, data.frame(X_validation_mm))
+  rmse_by_M[i] = sqrt(mean((y_validation - y_hats_validation)^2))
+}
+rmse_by_M
+#pacman::p_load(ggplot2)
+#ggplot(data.frame(y = y, yhat = qc_basement_gbm_predict(g_b, X))) + aes(x = y, y = yhat) + geom_point()
+
+```
+
+Now find the error in the test set and comment on its performance:
+
+```{r}
+M_star = M_grid[which.min(rmse_by_M)]
+diamonds_g_b = qc_basement_gbm(data.frame(rbind(X_train, X_validation_mm)), c(y_train, y_validation), M = M_star)
+y_hats_test = qc_basement_gbm_predict(diamonds_g_b, data.frame(X_test_mm))
+sqrt(mean((y_test - y_hats_test)^2))
+mean(y_test)
+sqrt(mean((y_test - mean(y_test))^2))
+```
+
+## Solution
+
+The performance is not impressive; the RMSE is about a third of the mean
+response value.  However compared to the null model, which has an RMSE of
+3938, it seems very good.
+
+Repeat this exercise for the adult dataset. First create the splits:
+
+```{r}
+# index_train sampled at start of lab
+feature_columns = !colnames(adult_imp) %in% c("income")
+y_train = adult_imp[index_train, ]$income
+X_train = adult_imp[index_train, feature_columns]
+
+validation_size = 2000
+index_validation = sample(setdiff(1 : nrow(adult_imp), index_train), validation_size)
+
+y_validation = adult_imp[index_validation, ]$income
+X_validation = adult_imp[index_validation, feature_columns]
+
+test_size = 2000
+index_test = sample(setdiff(1 : nrow(adult_imp), c(index_train, index_validation)), test_size)
+
+y_test = adult_imp[index_test, ]$income
+X_test = adult_imp[index_test, feature_columns]
+```
+
+Using your new gradient boosting function, optimize the number of base learners, M for the diamonds data using a grid search:
+
+```{r}
+M_grid = seq(from = 25, to = 100, by = 25)
+rmse_by_M = array(NA, dim = length(M_grid))
+for (i in 1 : length(M_grid)) {
+  cat("*************** M =", M_grid[i], "***************\n")
+  adult_g_b = qc_basement_gbm(data.frame(X_train), y_train, M = M_grid[i], verbose = FALSE)
+  y_hats_validation = qc_basement_gbm_predict(adult_g_b, data.frame(X_validation))
+  rmse_by_M[i] = sqrt(mean((y_validation - y_hats_validation)^2))
+}
+rmse_by_M
+```
+
+Now find the error in the test set and comment on its performance:
+
+```{r}
+M_star = M_grid[which.min(rmse_by_M)]
+adult_g_b = qc_basement_gbm(data.frame(rbind(X_train, X_validation)), c(y_train, y_validation), M = M_star)
+y_hats_test = qc_basement_gbm_predict(adult_g_b, data.frame(X_test))
+sqrt(mean((y_test - y_hats_test)^2))
+```
+
+
