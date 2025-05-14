@@ -107,7 +107,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\section{Missingness in Future Units}
 	Last time we talked about the need to perform imputation to deal with missingness
 	in our data. Let's consider again what happens when we do a train-test split
-	in the presence of missingness, as in Figure~\ref{fig:train-test-missing}.
+	and there is missingness, as in Figure~\ref{fig:train-test-missing}.
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.4\textwidth]{train-test-split-missingness}
@@ -153,7 +153,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		be expensive. This may be reasonable if we are doing batch predicting,
 		meaning that we are predicting for much more than just one new unit.
 		
-		\item \textbf{Reuse (Fastest but least accurate)}: In this case, we
+		\item \textbf{Reuse (fastest but least accurate)}: In this case, we
 		do not start the imputation from our original $X$. We start with
 		$[X_{\text{imp}} \mid M]$, and we impute on the matrix with $n+1$ rows
 		consisting of $[X_{\text{imp}} \mid M]$ and $[\bm{x}_* \mid M_*]$.
@@ -180,8 +180,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	but one may be more costly than the other. If $C_{FP}$ is the cost of
 	false-positives, $C_{FN}$ is the cost of false negatives, and
 	$C_{FP} > C_{FN}$ (say, $C_{FP}= 100 \cdot C_{FN})$, then we want to be
-	absolutely sure that when we predict $\hat{y} = 1$, the it is indeed
-	a true positive. How do incorporate this heuristic in our model?
+	absolutely sure that when we predict $\hat{y} = 1$, then it is indeed
+	a true positive. How do we incorporate this heuristic in our model?
 	
 	For example, instead of using the \text{mode} (highest frequency), can
 	we do something else? The canonical way to do this is with
@@ -235,24 +235,24 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	Winnings give us a more complete picture. However in this course we will
 	focus on minimizing $C$.
 	
-	Let's consider the effect on increasing $p_{\text{th}}$ as we step through
+	Let's consider the effect of increasing $p_{\text{th}}$ as we step through
 	the grid. As $p_{\text{th}}$ increases, it becomes harder to predict
 	$\hat{y} = 1$ because the probability threshold is higher. As a result,
 	the number of false positives $(FP)$ and true positives ($TP$) will decrease,
 	and hence the number of false negatives ($FN$) and true negatives ($TN$) will
 	increase. Remember that $P$ and $N$ stay the same since the response is not
-	changing throughout this process. The effect on the some of the remaining metrics
+	changing throughout this process. The effect on some of the remaining metrics
 	is as follows:
 	\begin{itemize}
 		\item \textbf{Recall}: Defined as $\frac{TP}{P}$, this value will decrease
 		because $P$ remains constant and $TP$ is decreasing as $p_{\text{th}}$ increases.
-		\item \textbf{Precision}: Defined as $\frac{TP}{PP}$, this value increases,
-		Note that since both $FP$ and $TP$ increase, we see an increase in $PP$.
+		\item \textbf{Precision}: Defined as $\frac{TP}{PP}$, this value increases.
+		Note that since both $FP$ and $TP$ decrease, we see a decrease in $PP$.
 		Thus, both the numerator $TP$ and the denominator $PP$ decrease,
 		making it harder to immediately see how this quantity changes. However,
 		note that the model is more sure of its predictions as $p_{\text{th}}$
 		increases. Therefore, the ratio of $TP$ to $PP$ will increase.
-		\item \textbf{False Discovery Rate (FDR)}: Defined as $\frac{FP}{PP} = 1 - \text{Precision}$, this value decreases.
+		\item \textbf{False Discovery Rate (FDR)}: Defined as $\frac{FP}{PP} = 1 - \text{Precision}$, this value decreases (since Precision increases).
 		\item \textbf{FOR}: Defined as $\frac{FN}{PN}$, this value increases.
 		This is similar to the reason for an increase in Precision; the number
 		of predicted negatives ($PN$) increases because the model is attempting
@@ -272,7 +272,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{align*}
 	Incidentally, $FPR$ is the \textbf{false positive rate}, defined as
 	\begin{align*}
-		FPR := \frac{TN}{N}
+		FPR := \frac{FP}{N}
 	\end{align*}
 	\section{Receiver Operator Curve}
 	Consider a naive probability estimation model
@@ -306,14 +306,14 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{align*}
 	and the $FPR$ is
 	\begin{align*}
-		FPR := \frac{FPR}{N} = \frac{(1 - p_{\text{th}})\cdot N}{N} = 1 - p_{\text{th}}
+		FPR := \frac{FP}{N} = \frac{(1 - p_{\text{th}})\cdot N}{N} = 1 - p_{\text{th}}
 	\end{align*}
 	Thus we see that for $g_{\text{naive}}$, Recall equals $FPR$. We would like
 	to maximize Recall and minimize $FPR$.
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.7\textwidth]{receiver-operator-curve}
-		\caption{A plot of Recall vs. $FPR$. The dotted line is the naive
+		\caption{The ROC curve, a plot of Recall vs. $FPR$. The dotted line is the naive
 		model, and the solid line is ``our model". Each point on each curve
 		corresponds to a distinct value of $p_{\text{th}}$, since both
 		$FPR$ and Recall are functions of $p_{\text{th}}$.}
@@ -330,29 +330,29 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	We call this curve the \textbf{Receiver Operator Curve (ROC)}.
 	The ROC allows for comparisons among probability estimation models,
 	similar to the Brier and log scoring rules. It is computationally
-	intensive, but some prefer it gives a very intuitive comparison.
+	intensive, but some prefer it since it gives a very intuitive comparison.
 	For example, if the area under the curve comes out to $0.501$, then
 	the model barely outperforms picking numbers at random.
 	
-	\section{FPR vs. FOR}
-	Let's revisit the definitions of $FPR$ and $FOR$:
+	\section{FDR vs. FOR}
+	Let's revisit the definitions of $FDR$ and $FOR$:
 	\begin{align*}
-		FPR := \frac{FP}{PP} \quad\quad\quad FOR := \frac{FN}{PN}
+		FDR := \frac{FP}{PP} \quad\quad\quad FOR := \frac{FN}{PN}
 	\end{align*}
-	Note that t he other error metrics are a function of $N$ and $P$,
+	Note that the other error metrics are a function of $N$ and $P$,
 	but that's not reality because we do not have access to these
 	(we do not get to see the $y$'s). That is why $FDR$ and $FOR$
 	are better (this is an opinion). So, this motivates a curve that graphs
-	$FOR$ vs. $FOR$. See Figure~\ref{fig:fdr-vs-for}
+	$FDR$ vs. $FOR$. See Figure~\ref{fig:fdr-vs-for}.
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.5\textwidth]{fdr-vs-for}
 		\caption{Comparing models by plotting FDR vs. FOR.}
 		\label{fig:fdr-vs-for}
 	\end{figure}
-	Note the trade-off; high $FDR$ corresponds to low $FOR$, and viceversa.
+	Note the trade-off: high $FDR$ corresponds to low $FOR$, and viceversa.
 	Unlike the Recall vs. $FPR$ line, there is no comparison against a
 	naive line, but we can use it to compare models. It is useful for
 	reading error rates, which is what we are interested in when we predict
-	in the future.
+	the future.
 \end{document}

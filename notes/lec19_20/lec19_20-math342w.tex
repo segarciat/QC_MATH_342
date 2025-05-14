@@ -145,7 +145,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	realization of a random variable $E$
 	\begin{align*}
 		Y &= g + \overbrace{(f - g) + \Delta}^{E}\\
-		E &= Y - g
+		E &= (f-g) + \Delta = Y - g
 	\end{align*}
 	Let's predict on a new observation $\bm{x}_*$:
 	\begin{align*}
@@ -153,10 +153,10 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{align*}
 	Then the associated error is
 	\begin{align}
-		E_* = f(\bm{x}_*) - g(\bm{x}_*) + \Delta_* = Y_* - g
+		E_* = f(\bm{x}_*) - g(\bm{x}_*) + \Delta_* = Y_* - g(\bm{x}_*)
 		\label{eqn:error-rv}
 	\end{align}
-	See Figure~\ref{fig:prediction-error-rv}
+	See Figure~\ref{fig:prediction-error-rv}.
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.6\textwidth]{prediction-error-random-variable}
@@ -212,10 +212,10 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\textbf{irreducible error}. This comes from $\Delta$, which we don't know.
 	Recall bias results from misspecification and estimation.
 	\subsection*{Allowing Randomness in Responses}
-	Suppose now that $\mathbb{D}$ is random. Then $y_1,\ldots,y_n$
-	are realized are from $Y_1,\ldots,Y_n$ via $\Delta_1,\ldots,\Delta_n$, but
-	$\bm{x}_1,\ldots,\bm{x}_n$ are constant. We make a third assumption,
-	in addition to \ref{eqn:assumption-1-mean-zero-independent} and
+	Suppose now that $\mathbb{D}$ has randomness in the responses (not in $X$).
+	Then $y_1,\ldots,y_n$ are realized are from $Y_1,\ldots,Y_n$ via
+	$\Delta_1,\ldots,\Delta_n$, but $\bm{x}_1,\ldots,\bm{x}_n$ are constant. We make
+	a third assumption, in addition to \ref{eqn:assumption-1-mean-zero-independent} and
 	\ref{eqn:assumption-2-homosk}:
 	\begin{center}
 		(III) $\Delta_1,\ldots,\Delta_n$ are independent
@@ -224,18 +224,19 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	models are different. There are uncountably-infinitely many data sets; what changes
 	is the offset from $f(x)$. In the real world, you see one data set $\mathbb{D}$,
 	and you would construct one $g(x)$. Each will be different because $g$ is
-	a function of the algorithm, and since $\mathbb{D}$ is random, $g$
+	a function of the algorithm, and since the $y$'s in $\mathbb{D}$ are random, $g$
 	is in fact a realization of a corresponding random $G$:
 	\begin{align*}
 		G
 		= \mathcal{A}(\mathbb{D}, \mathcal{H})
 		= \mathcal{A}(\langle X, \vec{Y}\rangle, \mathcal{H})
 	\end{align*}
-	where $\vec{Y}$ is a (vector) random variable since $\mathbb{D}$ is random.
+	where $\vec{Y}$ is a (vector) random variable.
 	Now consider the Mean-Squared Error again, defined as in \ref{eqn:-def-MSE}.
 	In the following, $\mathbb{E}_{\mathbb{D}}$ means expectation involving
-	randomness in $\mathbb{D}$ (as a consequence of randomness in $\Delta_1,\ldots,\Delta_n$),
-	while $\mathbb{E}_{\Delta_*}$ means expectation involving randomness in $\Delta_*$:
+	randomness in the responses in $\mathbb{D}$ (as a consequence of randomness in
+	$\Delta_1,\ldots,\Delta_n$), while $\mathbb{E}_{\Delta_*}$ means expectation
+	involving randomness in $\Delta_*$:
 	\begin{align*}
 		MSE[\bm{x}_*] :
 		&= \underset{\Delta_*, \mathbb{D}}{\mathbb{E}}[(Y_* - G(\bm{x}_*))^2 \mid \bm{x}_*, X]\\
@@ -308,17 +309,17 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	How can we reduce the values of the last two terms in
 	Equation~\ref{eqn:general-bias-var-decomp}? We can make the bias $0$ by
 	making $\mathcal{H}$ complex, effectively overfitting. Hence, bias would
-	decrease, but the variance term will in increase. Recall setting (I) of our
-	model selection procedure, where we have $M$ pre-specified modeling procedures
-	and we choose the optimal $m_*$. Consider the \textbf{model average}
-	(also called \textbf{model averaging}):
+	decrease, but the variance term will in increase.\footnote{Recall setting (I) of our
+		model selection procedure, where we have $M$ pre-specified modeling procedures
+		and we choose the optimal $m_*$? This may be a good place to apply it.}
+	Consider the \textbf{model average}:
 	\begin{align*}
 		g_{avg} := \frac{\sum_{m=1}^{M}g_m}{m}
 	\end{align*}
 	This can be smart if all $M$ models are known to be good, since this can
 	reduce variation. On the down side, we give up interpretability (suppose,
 	for example, they were linear models). Let's examine the bias-variance decomposition
-	for $g_{avg}$ (hereby we use $G_{avg}$, since $g_{avg}$ is realized from it):
+	for $g_{avg}$ (henceforth we use $G_{avg}$, since $g_{avg}$ is realized from it):
 	\begin{align}
 		MSE :
 		&= \sigma^2 + \mathbb{E}[\text{Bias}[G_{avg}(\bm{x}_*)]^2]
@@ -357,20 +358,22 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	What do we make of this? Assumption (ii) said that we have independent models,
 	which is fake! Moreover, in the real world, we have one data set $\mathbb{D}$,
 	and one $g$, so the $g$'s cannot be independent. However the fact that we
-	eliminated bias by overfitting is reasonable. We need to come up with a
-	reasonable way to reduce the variance term that does not use assumption (ii).
+	eliminated bias by overfitting is reasonable (we can use trees with small $N_0$).
+	We need to come up with a reasonable way to reduce the variance term that does
+	not use assumption (ii).
 	\subsection*{Review of Correlation and Covariance}
 	Recall from introductory probability that the \textbf{covariance}
 	of a pair of random variables $X_i$ and $X_j$ is given by
 	\begin{align*}
 		\sigma_{ij} := \text{Cov}[X_i,X_j] := \mathbb{E}[X_i\cdot X_j] - \mu_i\mu_j
 	\end{align*}
+	where $\mu_i = \mathbb{E}[X_j]$.
 	Meanwhile, the \textbf{correlation} of random variables $X_i$ and $X_j$
 	is given by
 	\begin{align*}
 		\rho := \text{Corr}[X_i,X_j] := \frac{\text{Cov}[X_i,X_j]}{\text{SD}[X_i]\cdot \text{SD}[X_j]}
 	\end{align*}
-	where SD stands for standard deviation, and $\mu_i = \mathbb{E}[X_j]$.
+	where SD stands for standard deviation.
 	The covariance is a measure of how much $X_i$ and $X_j$ change together,
 	yielding a positive value if both tend to increase together, and negative
 	if both tend to decrease together. The correlation $\rho$ is a normalized
@@ -411,7 +414,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{align}
 	\subsection*{Dependent Models}
 	Continuing to assume equal bias for models $G_1,\ldots,G_M$, that
-	the variance of each model is the same, and adding the new assumption that
+	the variance of each model is the same, and replacing assumption (ii)
+	with the assumption that
 	the covariance of each pair of models is the same:
 	\begin{align*}
 		MSE :
@@ -443,7 +447,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	
 	Let's sample the results of $\mathbb{D}$ a total of $n$ times with replacement
 	where $n$ is the number of data points in $\mathbb{D}$.
-	The probability that a given row is chosen on any given try is
+	The probability that a given row is chosen on any given trial is
 	$\frac{1}{n}$, and hence the probability that it is omitted is
 	$\frac{n-1}{n}=1-\frac{1}{n}$. Thus, the probability that a given
 	row is omitted in all $n$ tries is

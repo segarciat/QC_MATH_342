@@ -119,7 +119,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{align*}
 		\mathcal{A}_1 &= \text{OLS},\quad \mathcal{H}_1 = \{\, w_0+w_1x \mid \bm{w}\in\mathbb{R}^2 \,\}\\
 		\mathcal{A}_2 &= \text{OLS},\quad \mathcal{H}_2 = \{\, w_0+w_1x+w_2x^2\mid \bm{w}\in\mathbb{R}^3\}\\
-		\mathcal{A}_3 &= \text{OLS},\quad \mathcal{H}_3 = \{\, w_0+w_1+w_2\ln(x) \mid \bm{w}\in\mathbb{R}^3\}\\
+		\mathcal{A}_3 &= \text{OLS},\quad \mathcal{H}_3 = \{\, w_0+w_1x+w_2\ln(x) \mid \bm{w}\in\mathbb{R}^3\}\\
 		\mathcal{A}_4 &= \text{OLS or logistic},\quad \mathcal{H}_4 = \{\ldots\}
 	\end{align*}
 	We wish to:
@@ -130,7 +130,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{enumerate}
 	\begin{tcolorbox}[breakable]
 		\begin{example}
-			Mode selection is a fundamental problem of science. For example,
+			Model selection is a fundamental problem of science. For example,
 			there were originally a few classical models of gravitation:
 			\begin{enumerate}[label=(\arabic*)]
 				\item $F = G\frac{m_1m_2}{r^2}$
@@ -138,7 +138,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				\item $F = G_1\frac{m_1m_2}{r^2}e^{-G_2r}$
 			\end{enumerate}
 			Model (2) might have been a better fit, but there may have been
-			other trade-offs that led to it losing favor over (1).
+			other trade-offs that caused it losing favor over (1).
 		\end{example}
 	\end{tcolorbox}
 	\section*{No Cross-Validation (CV)}
@@ -164,7 +164,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\begin{bmatrix}
 			{} & \mathbb{D}_{\text{test}} & {}
 		\end{bmatrix}
-		}_{n_{\text{test}}\times p}
+		}_{n_{\text{test}}\times p},\quad n_{\train} + n_{\test} = n
 	\end{align*}
 	We did this to obtain honest estimate of out-of-sample performance.
 	A natural extension of this idea is to run each of the $M$ algorithms on $\Dtrain$
@@ -190,14 +190,14 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	Hence, according to this scheme, the best model is $(\mathcal{A}_{m_*}, \mathcal{H}_{m_*})$.
 	In expectation (that is, on average), this is a good way to choose the best
 	model. However, what we do not get out of this is an estimate of future
-	predictive performance. If $M$ is large, it's possible that we ``get lucky".
+	predictive performance. If $M$ is large, it's possible that we ``get lucky",
 	meaning we get an algorithm-candidate set pair that optimizes for $\Dtrain$ and $\Dtest$.
 	That is, we may get a pair $(\mathcal{A}_k, \mathcal{H}_k)$ that ``accidentally"
 	does well on $\Dtrain$ and $\Dtest$, but still performs poorly out-of-sample.
 	This is a form of overfitting. We need to be careful to treat $\Dtest$ as an
 	opaque box that we open only once.
 	
-	To address this, we further split $\mathbb{D}$ so that we have three
+	To address this, we further partition $\mathbb{D}$ so that we have three
 	pieces:
 	\begin{align*}
 		\underbrace{
@@ -219,7 +219,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	where $n=n_\train + n_\select + n_\test$ is the total number of observations and
 	\begin{align*}
 		n_\test &= \frac{1}{K_\test}\cdot n = \text{Number of rows in }\Dtest\\
-		n-n_\train&=\left(1- \frac{1}{K_\test}\right)\cdot n = \text{Number of rows in }\Dtrain\cup \Dselect\\
+		n-n_\train&=\left(1- \frac{1}{K_\test}\right)\cdot n = \text{Number of rows in }\Dtrain\cup \Dselect = \mathbb{D} \setminus \Dtest\\
 		n_\select &= \frac{1}{K_\select}(n-n_\train) = \frac{1}{K_\select}\left(1 - \frac{1}{K_\test}\right)n=\text{Number of rows in }\Dselect
 	\end{align*}
 	Then we repeat the process from earlier, replacing $\Dtest$ with $\Dselect$:
@@ -274,11 +274,11 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	cross-validation on each of the $M$ models.
 	\begin{itemize}
 		\item \textbf{Step 1}: Fix a value for $K_\test$, denoting the proportion
-		of $\mathbb{D}$, so that $\Dtest$ is fixed for the rest of the algorithm,
-		which will be used in the final validation step. Hence, $\mathbb{D}\setminus \Dtest$
-		is also fixed.
+		of $\mathbb{D}$ to use for $\Dtest$, so that $\Dtest$ is fixed for the rest
+		of the algorithm, which will be used in the final validation step.
+		Hence, $\mathbb{D}\setminus \Dtest$ is also fixed.
 		\item \textbf{Step 2}: Fix a value of $K_\select$, denoting the proportion $\mathbb{D}\setminus \Dtest$
-		that will be used for testing each of the $M$ algorithms. Note that $K_\test$
+		that will be used for testing each of the $M$ algorithms. Note that $K_\select$
 		is fixed but $\Dselect$ is not.
 		\item \textbf{Step 3}: Shuffle the data set $\mathbb{D}\setminus \Dtest$.
 		\item \textbf{Step 4}: For $m\in \{1,2,\ldots,M\}$, that is, for each pair
@@ -288,10 +288,10 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			\begin{itemize}
 				\item Take the next piece (the $k$th piece) of proportion $K_\select$
 				from $\mathbb{D}\setminus \Dtest$ to use as $\mathbb{D}_{\text{select}, k}$
-				(Say, we start from the bottom of $\mathbb{D}\setminus \Dtest$).
+				(say, we start from the bottom of $\mathbb{D}\setminus \Dtest$).
 				What remains is $\mathbb{D}_{\text{train}, k}$.
 				\item Compute a prediction function $g_{k}^{(m)}=\mathcal{A}_m(\mathbb{D}_{\train, k}, \mathcal{H}_m)$.
-				\item Predict on $\mathbb{D}_{\test, k}$ using $g_{k}^{(m)}$, yielding error
+				\item Predict on $\mathbb{D}_{\select, k}$ using $g_{k}^{(m)}$, yielding error
 				vector $\bm{e}_k^{(m)}$.
 			\end{itemize}
 			\item After doing $K_\select$ folds for the $m$th model, stack the residual
@@ -328,11 +328,11 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\section*{Select and Test CV}
 	A third approach we can use is called \textbf{select and test CV}, or
 	\textbf{nested resampling}. This approach reduces the variation of $oosRMSE_*$
-	of the $g_{\text{final}}$ by varying $\Dtest$ rather than maintaining it fixed.
+	in $g_{\text{final}}$ by varying $\Dtest$ rather than keeping it fixed.
 	We pay in computational expense, which is determined by $K_\test\cdot K_\select\cdot M$.
 	However, we are more sure that we pick the best of our $M$ models.
 	Note the algorithm for select-CV had a nested loop; this algorithm would
-	add yet another level of for $K_\test$.
+	add yet another level of nesting $K_\test$.
 	
 	\href{
 		https://mlr.mlr-org.com/articles/tutorial/nested_resampling.html}{Click here to navigate to a page with an example to visualize nested resampling}.
@@ -342,8 +342,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{enumerate}[label=(\arabic*)]
 		\item Pick one model among $M$ pre-specified modeling precedures, provide
 		a conservative estimate of future performance, and compute $g_{\text{final}}$.
-		\item Greedy Forward Stepwise Modeling
-		\item Hyperparameter Selection
+		\item Greedy Forward Stepwise Modeling.
+		\item Hyperparameter Selection.
 	\end{enumerate}
 	Recall that there are infinitely-many candidate sets. Therefore (1) can be unrealistic.
 	(2) provides an alternative.
@@ -354,7 +354,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\begin{align*}
 			\{
 			&x_1,\ldots,x_p, x_1^2,\ldots,x_p^2,x_1^3,\ldots,x_p^3,\ln(x_1),\ldots,\ln(x_p)\\
-			&x_1x_2,\ldots,x_1xp,\ldots,x_2x_3,\ldots,x_2x_p,\ldots,x_{p-1}x_p\\
+			&x_1x_2,\ldots,x_1x_p,\ldots,x_2x_3,\ldots,x_2x_p,\ldots,x_{p-1}x_p\\
 			&x_1x_2x_3,\ldots,x_{p-2}x_{p-1}x_{p},\sin(x_1),\ldots,\sin(x_p)
 			\}
 		\end{align*}
@@ -364,7 +364,8 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		$2^{p+1}$! We will search this space greedily (not optimally), which will
 		give us a decent solution.
 		
-		Begin with $g_0$, so $\mathcal{H}_0=\{w_0:w_0\in \mathbb{R}\}$ (this is our ``seed").
+		Begin with some $g_0\in\mathcal{H}_0$ (e.g. the null model), where
+		$\mathcal{H}_0=\{w_0:w_0\in \mathbb{R}\}$ (this is our ``seed").
 		\item \textbf{Step 1}: For each of the $p$ features, fit OLS to
 		\begin{align*}
 			\mathcal{H} = \{\,
@@ -380,7 +381,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			\bm{w}\in\mathbb{R}^3
 			\,\}
 		\end{align*}
-		using $\Dtrain$. Then predict using $\mathbb{D}_*$ to compute an $oosRMSE$ for
+		using $\Dtrain$. Then predict using $\mathbb{D}_\select$ to compute an $oosRMSE$ for
 		each. Record the best feature $j_{*_2}$ based on the best $oosRMSE$.
 		Note that it cannot be $j_{*_1}$ because that feature is not under consideration
 		in the remaining $p-1$ features.
@@ -428,14 +429,14 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	Suppose we create a grid of $M$ values that $\lambda$ can take on. For example:
 	\begin{align*}
 		\lambda_{\text{grid}} = \{
-		0.001, 0.01, 0.1, 1, 10, 100
+			10^{-3}, 10^{-2}, 10^{-1}, 10^0, 10^{1}, 10^{2}
 		\}
 	\end{align*}
 	Now we can use no-CV, select-CV, or nested resampling to pick the best
 	$\lambda\in \lambda_{\text{grid}}$. The weakness in this approach is having
 	to pre-specify $M$ models, which in this setting translates in pre-specifying
 	$M$ hyperparameters. To do this effectively, we need a reasonable range of $\lambda$
-	vales to consider. If our algorithm has more than one hyperparameter,
+	values to consider. If our algorithm has more than one hyperparameter,
 	our $\lambda_{\text{grid}}$ might be two-dimensional, i.e., a set of tuples.
 	\pagebreak
 	\printbibliography

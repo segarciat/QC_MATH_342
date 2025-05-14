@@ -111,7 +111,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{figure}
 	
 	Consider the data set $\mathbb{D}$ depicted in Figure~\ref{fig:underfit-D-with-linear}
-	and the linear approximation $h_0*$ depicted, where $h_0\in \mathcal{H}_0$ and
+	and the linear approximation $h_0^*$ depicted, where $h_0^*\in \mathcal{H}_0$ and
 	\begin{align*}
 		\mathcal{H}_0 =\{\, w_0+w_1x \mid w_0,w_1\in \mathbb{R}\,\} 
 	\end{align*}
@@ -120,7 +120,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	to the true drivers.
 	
 	We reiterate that $h_0^*$ is likely not close to $f$, but it is the best we can do in
-	$\mathcal{H}_0$; simply, $f(x)$ is \textit{not} linear in this this example, so
+	$\mathcal{H}_0$; simply, $f(x)$ is \textit{not} linear in this example, so
 	even the best linear approximation will not perform well. This is an example of
 	\textbf{underfitting}.
 	
@@ -141,29 +141,29 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{figure}
 	Figure~\ref{fig:better-fit-D-with-quadratic} shows fitting $\mathbb{D}$ with
 	a quadratic function $h^*\in \mathcal{H}$. Note how the coefficient $w_2$
-	of the quadratic term of the functions in $\mathcal{H}$ are a scalar
+	of the quadratic term of the functions in $\mathcal{H}$ is a scalar
 	multiple of $x^2$, which is the square of the single feature we have.
 	That is, we still only measure 1 feature, but we are using it twice. In this
 	setting, we say $p_{\text{raw}} = 1$, and $p=2$; we call $x^2$ a \textbf{transformed}
 	or \textbf{derived} feature. Compare this with using a linear model, where we
-	would introduce a new coefficient $b_2$, but in that case, it would be an example
-	of chance capitalization, and hence overfitting.
+	would introduce a new coefficient $b_2$ and corresponding feature, which instead
+	may lead to chance capitalization and hence overfitting.
 	
 	Using derived features that are squares, cubes, etc, of the raw features is an example
 	of \textbf{polynomial regression}. Here's a question: is
 	\begin{align*}
 		\hat{y} = b_0 + b_1x + b_2 x^2
 	\end{align*}
-	a linear model? We can justify the answer both ways:
+	a linear model? We might answer the following ways:
 	\begin{itemize}
 		\item \textbf{Yes}: It is linear because $g$ is a linear combination of the
 		raw and derived features.
 	\item \textbf{No}: It is not linear because $g$ is not a straight line (hyperplane).	\end{itemize}
 	Now, we may ask whether it is justified or ``principled" to use polynomial regression.
-	In fact, it is, and it s a consequence of the famous Stone-Weierstrass theorem, which
+	In fact, it is, and it is a consequence of the famous Stone-Weierstrass theorem, which
 	proves that any continuous function $f:\mathbb{R}^p\to \mathbb{R}$ can be approximated
-	by a sum of polynomials. If you have learned basic calculus, you may have seen a similar
-	example of this: Taylor's Theorem. Indeed, Taylor Theorem says that an infinitely differentiable
+	by a sum of polynomials. If you have learned basic calculus, you may remember a similar
+	statement: Taylor's Theorem. Indeed, Taylor Theorem says that an infinitely differentiable
 	function can be expressed as an infinite sum of polynomials. However, Stone-Weierstrass
 	does not require differentiability, only continuity.
 	
@@ -260,8 +260,7 @@ X = cbind(1, x, x^2)
 	and $1$), then we cannot apply this transformation, since squaring will result
 	in the same value, hence yielding a linearly dependent column.
 	\subsection*{Interpretability and Machine Learning}
-	One point is whether our new result is interpretable, and how much that
-	matters to us. Consider
+	How do transformed features affect interpretability? Consider
 	\begin{align*}
 		\hat{y} = b_0 + b_1x + b_2x^2 = b_0 + (b_1 + b_2x)x
 	\end{align*}
@@ -380,7 +379,7 @@ X = cbind(1, x, x^2)
 	The interpretation is that if there is a one unit change in $x$, then the predicted
 	response is a $b_1$ proportion change. For example, if $b_1=0.37$, then
 	$\hat{y}$ changes by $37\%$.
-	\subsection*{$\log(y)$ vs $\log(x)$}
+	\subsection*{$\log(\hat{y})$ vs $\log(x)$}
 	Suppose we transform both the feature and the response by applying the logarithm:
 	\begin{align*}
 		\ln(\hat{y}) = b_0 + b_1\ln(x)
@@ -414,11 +413,11 @@ X = cbind(1, x, x^2)
 			\ln(y_3)
 		\end{bmatrix}
 	\end{align*}
-	and then using OLS as usual with $\bm{y} = (X^\top X)^{-1}X^\top \bm{y}'$.
-	This yields
+	and then applying OLS as usual with $\bm{y} = (X^\top X)^{-1}X^\top \bm{y}'$.
+	This leads to
 	\begin{align*}
 		\ln(\hat{y})
-		&= b_0 + b_1 x_1 + \cdots + b_px_p \iff\\
+		&= b_0 + b_1 x_1 + \cdots + b_px_p\\
 		\hat{y} &= e^{b_0} e^{b_1x_1}\cdots e^{b_px_p}\\
 		&=e^{b_0}(e^{b_1})^{x_1}\cdots )(e^{b_p})^{x_p}\\
 		&=m_0\cdot m_1^{x_1}\cdots m_p^{x_p}
@@ -447,7 +446,6 @@ X = cbind(1, x, x^2)
 		\caption{A histogram of the responses values $y$.}
 		\label{fig:histogram-y-difficult-capturing-extremes}
 	\end{figure}
-	
 	Applying a logarithmic transformation results in something like in
 	Figure~\ref{fig:log-transformation-histogram-y}.
 	\begin{figure}
@@ -466,21 +464,19 @@ X = cbind(1, x, x^2)
 	\end{align*}
 	where the $g_j$'s are arbitrarily complex and possibly non-linear (note that
 	in simple polynomial regression, we have $g_j(x)=x^j$). This is called a
-	\textbf{generalized linear model (GAM)}. Although well-studied, GAMs have
+	\textbf{generalized additive model (GAM)}. Although well-studied, GAMs have
 	fallen out of favor, as we will see when we discuss random forests.
 	
-	What is missing from this type of model $\mathcal{H}$? Functions of multiple
-	variables.
 	Notice that functions of multiple variables are missing from the type of
 	model $\mathcal{H}$ implied by GAM, so we have
 	\begin{align*}
 		\frac{\partial}{\partial x_\ell} [g_j(x_j)] = 0,\quad \forall_{j\neq \ell}
 	\end{align*}
 	Put another way, the model does not account for \textit{interactions between features}.
-	The following model for $p=2$ allows for a \textit{first-order interaction}:
+	The following model for $p_{\text{raw}}=2$ allows for a \textit{first-order interaction}:
 	\begin{align*}
 		\mathcal{H} = \{\,
-		w_0 + w_1x + w_2x_2 + w_3x_1x_2 \mid \bm{w}\in \mathbb{R}^4
+		w_0 + w_1x_1 + w_2x_2 + w_3x_1x_2 \mid \bm{w}\in \mathbb{R}^4
 		\,\}
 	\end{align*}
 	Here, $x_1$ interacts with $x_2$, and the transformation from $X_\text{raw}$ is
@@ -502,9 +498,9 @@ X = cbind(1, x, x^2)
 		\end{bmatrix}
 	\end{align*}
 	Again, we apply OLS to get $\bm{b} = (X^\top X)^{-1}X^\top \bm{y}$.
-	This time, we prediction is given by
+	This time, our prediction function is given by
 	\begin{align*}
-		\bm{y}
+		\hat{\bm{y}}
 		&= b_0 + b_1x_1 + b_2x_3 + b_3x_1x_2\\
 		&= b_0 + b_1x_1 + (b_2 + b_3x_1)x_2\\
 		&= b_0 + b_2x_2 + (b_1 + b_3x_2)x_1

@@ -120,7 +120,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.3\textwidth]{data-set-numeric-response-1-feature-ols-linear}
-		\caption{A linear fit for $\mathbb{D}$ as from Figure~\ref{fig:data-set-numeric-response-1-feature}.}
+		\caption{A linear fit for $\mathbb{D}$ in Figure~\ref{fig:data-set-numeric-response-1-feature}.}
 		\label{fig:data-set-numeric-response-1-feature-linear}
 	\end{figure}
 	By looking at the data set, we can infer that $g_1$ incurs a lot of misspecification
@@ -137,7 +137,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.3\textwidth]{data-set-numeric-response-1-feature-ols-quadratic}
-		\caption{A quadratic fit for $\mathbb{D}$ as from Figure~\ref{fig:data-set-numeric-response-1-feature}.t-numeric-response-1-feature-quadratic}
+		\caption{A quadratic fit for $\mathbb{D}$ in Figure~\ref{fig:data-set-numeric-response-1-feature}.}
 		\label{fig:data-set-numeric-response-1-feature-quadratic}
 	\end{figure}
 	The quadratic fit may or may not do any better than the linear fit.
@@ -160,23 +160,23 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	Note that the least squares fit for $\mathcal{H}_3$ would not be ``ordinary"
 	(hence we do not call it OLS), since we cannot create a design matrix $X$
 	and compute $(X^\top X)^{-1}X^\top$ to get the least squares best values
-	$\bm{w}\in \mathbb{R}^4$. We would need to use an optimizer to minimize the
-	objective function
+	$\bm{w}\in \mathbb{R}^4$. We would need to use an optimizer like \texttt{optimx}
+	in R to minimize the objective function
 	\begin{align*}
 		\sum_{i=1}^{n}(y_i - w_0 + w_1\sin(w_2(x_i-w_3)))^2
 	\end{align*}
 	
-	The point of this exercise is to emphasize that when $p = 1$, it is fairly easy
-	to offer $M$ candidate modeling procedures, and to have at least one of them perform
-	well. However, if $p \gg 1$, how do we offer $M$ such models? We lose the ability
-	to visualize, say, 37 dimensions. The problem is that \textit{there is no easy
-	way to a priori (before the fact) specify all potentially fruitful non-linearities
-	and interactions among features}. This is where non-parametric machine learning
-	(hereby abbreviated as ML) comes in.
+	The point of this exercise was to emphasize that when $p = 1$, the task of
+	offering $M$ candidate modeling procedures where at least one performs well
+	may be reasonable. However, if $p \gg 1$, how do we offer $M$ such models? We
+	lose the ability to visualize, say, 37 dimensions. The problem is that
+	\textit{there is no easy way to a priori (before the fact) specify all
+	potentially meaningful non-linearities and interactions among features}. This is
+	where non-parametric machine learning (hereby abbreviated as ML) comes in.
 	
-	What do we mean by non-parametric? Note, for example, that $\mathcal{H}_1$
-	has 2 parameters, $\mathcal{H}_2$ has 3 parameters, and $\mathcal{H}_3$ has
-	4 parameters. By non-parametric, we mean that the number of parameters, and
+	Note that $\mathcal{H}_1$ has 2 parameters, $\mathcal{H}_2$ has
+	3 parameters, and $\mathcal{H}_3$ has 4 parameters.
+	By non-parametric, we mean that the number of parameters, and
 	the parameter definitions themselves, are \textit{not} pre-specified,
 	but they are fit automatically. It is ``as if" the candidate set expands
 	to what is needed. We will study \textbf{tree models}. In particular
@@ -202,7 +202,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\overbrace{[10, \infty)}^{A_{12}}
 	\end{align*}
 	Let's transform $x$ from a one-dimensional interval feature to
-	a $L = 12$-dimensional categorical variable, where each category denotes
+	a $12$-dimensional categorical variable ($L = 12$), where each category denotes
 	membership in one of the sets $A_\ell$. If $X_{\text{raw}}$ is our raw design
 	matrix using the raw interval feature $x$, then after the transformation
 	we get an $n\times L$ matrix $X$(without intercept):
@@ -220,11 +220,10 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\mathbb{I}_{x\in A_1} & \mathbb{I}_{x\in A_2} & \cdots & \mathbb{I}_{x\in A_{12}}
 		\end{bmatrix}
 	\end{align*}
-	Note that if we are assuming that $n \gg p$ and that we have at least one data point in each
-	interval $A_\ell$, $X$ will be full rank. If we fit using OLS, and $x_*$
+	Note that if we are assuming that $n \gg p$ and that we have at least one data point in each interval $A_\ell$, $X$ will be full rank. If we fit using OLS, and $x_*$
 	is a new observation (in $\mathcal{X}=\mathbb{R}$), our prediction function
-	would assign the predicted response $\hat{y}_* = \overline{y}_\ell$,
-	corresponding to the mean response of the observations in $\mathbb{D}$
+	would assign the predicted response $\hat{y}_* = \overline{y}_\ell$ for
+	some $\ell$, corresponding to the mean response of the observations in $\mathbb{D}$
 	for which $x\in A_\ell$:
 	\begin{align*}
 		\hat{\bm{y}} = \begin{bmatrix}
@@ -246,7 +245,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	There is a hyperparameter in this procedure, namely, the size of each interval,
 	or equivalently, the number of bins (here 12). This model might not beat
 	$\mathcal{H}_3$, but it might do better than $\mathcal{H}_1$ and $\mathcal{H}_2$.
-	To select the number of bins, we can use model procedure setting III that we discussed
+	To select the number of bins, we can use model procedure setting (III) that we discussed
 	last lecture. Note that if you use 1 bin, you have the null model $g_0$,
 	and if you use $n$ bins (where $n$ is the number of data points), you overfit.
 	
@@ -308,9 +307,9 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{itemize}
 	Since we have three bins in our example, there are three values we can predict
 	(and hence three leaves in the resulting binary tree). For example,
-	if we have an observation with $\bm{x}_* = [x_1 \ x_2] = [15, 21]$, then we first
+	if we have an observation with $\bm{x}_* = [x_1 , x_2] = [15, 21]$, then we first
 	note $x_2=21$ is larger than $4$, so we immediately predict $\hat{y}_* = 10.5$.
-	If instead $\bm{x}_* = [x_1 \  x_2] = [6 2]$, then $x_2\leq 4$ and $x_1\leq 4$,
+	If instead $\bm{x}_* = [x_1 ,  x_2] = [6 , 2]$, then $x_2\leq 4$ and $x_1\leq 7$,
 	so we predict $\hat{y}_* = 55$.
 	
 	The usage of orthogonal axes in Figure~\ref{fig:dynamic-split-interval-data}
@@ -332,6 +331,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				\begin{align*}
 					x_1&\leq \bm{x}_{\cdot 1(1)}, x_1 \leq \bm{x}_{\cdot 1(2)}, \ldots, x_1 \leq \bm{x}_{\cdot 1(n-1)}\\
 					x_2&\leq \bm{x}_{\cdot 2(1)}, x_2 \leq \bm{x}_{\cdot 2(2)}, \ldots, x_2 \leq \bm{x}_{\cdot 2(n-1)}\\
+					\vdots &\leq  \vdots \\
 					x_p&\leq \bm{x}_{\cdot p(1)}, x_p \leq \bm{x}_{\cdot p(2)}, \ldots, x_p \leq \bm{x}_{\cdot p(n-1)}\\
 				\end{align*}
 				This means we have $n\cdot (p-1)$ possible splits. Note we do not
@@ -374,6 +374,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				\begin{align*}
 					x_1&\leq \bm{x}_{\cdot 1(1)}, x_1 \leq \bm{x}_{\cdot 1(2)}, \ldots, x_1 \leq \bm{x}_{\cdot 1(n-1)}\\
 					x_2&\leq \bm{x}_{\cdot 2(1)}, x_2 \leq \bm{x}_{\cdot 2(2)}, \ldots, x_2 \leq \bm{x}_{\cdot 2(n-1)}\\
+					\vdots & \leq  \vdots\\
 					x_p&\leq \bm{x}_{\cdot p(1)}, x_p \leq \bm{x}_{\cdot p(2)}, \ldots, x_p \leq \bm{x}_{\cdot p(n-1)}\\
 				\end{align*}
 				This means we have $n\cdot (p-1)$ possible splits. Note we do not
@@ -388,12 +389,12 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 					G_{\text{neighbor, avg}} = \frac{n_L G_L + n_R G_R}{n_L + n_R}
 				\end{align*}
 				where $n_L$ is the number of observations in the left child,
-				$n_R$ is the number of observations in the right child.
+				and $n_R$ is the number of observations in the right child.
 				We get something similar to $SSE$ by defining
 				\begin{align*}
 					G := \sum_{l=1}^{L}\hat{p}_\ell(1 - \hat{p}_\ell)
 				\end{align*}
-				where $\hat{p}_\ell$ is the proportion of observations of whose response
+				where $\hat{p}_\ell$ is the proportion of observations whose response
 				is category $\ell$ in a given node:
 				\begin{align*}
 					\hat{p}_\ell := \frac{

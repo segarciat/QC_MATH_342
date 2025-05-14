@@ -97,7 +97,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	missing data.
 	
 	\subsection{Listwise Deletion}
-	The most naive (simple) approach for handling missingness is \textbf{listwise deletion},
+	The most naive (simplest) approach for handling missingness is \textbf{listwise deletion},
 	which involves dropping all rows that have missingness. This may be alright if
 	a ``trivial" amount of data is missing. However, if there is ``a lot" of missingness,
 	listwise deletion can introduce errors in our predictive model.
@@ -133,7 +133,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		P(M_{ij} = 1 \mid \gamma)
 	\end{align*}
 	where $\gamma$ is independent of all $X$ and $\bm{y}$ (that is,
-	$M \sim \text{Bernoulli}(\gamma)$).
+	$M_{ij} \sim \text{Bernoulli}(\gamma)$).
 	
 	\begin{tcolorbox}[breakable]
 		\begin{example}
@@ -223,7 +223,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				\end{bmatrix}
 			\end{align*}
 			where the first column corresponds to the 3rd feature, the
-			second to the 7th feature, and the third to th 11th feature.
+			second to the 7th feature, and the third to the 11th feature.
 		\end{example}
 	\end{tcolorbox}
 	Entry $M_{ij}$ is $1$ if $x_{ij}$ is missing, and is zero otherwise.
@@ -286,7 +286,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 						\bm{x}_{I_j, j}\sim [X_{I_j,-j}\mid M_{I_j, \cdot} \mid \bm{y}_{I_j, \cdot}]
 					\end{align*}
 					using random forests. That is, treat $\bm{x}_{I_j, j}$ as
-					a response, and created an augmented matrix by concatenating
+					a response, and create an augmented matrix by concatenating
 					the columns of $X_{I_j,-j}$, $M_{I_j, \cdot}$, and $\bm{y}_{I_j, \cdot}$
 					(The notation above is similar to the R notation for
 					$\mathtt{lm(y \sim  X)}$).
@@ -358,10 +358,10 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		X_{\text{imp}} = \text{MissForest}(X, \bm{y}')
 	\end{align*}
 	Note that we do not care what it imputes to for the indices of $\bm{y}_{\text{test}}$;
-	we just want to use it to fill in the missing entries in $X$ without relying on the
-	actual values of $\bm{y}_{\text{test}}$. Indeed, we need to impute both $X_{\text{train}}$
-	and $X_{\text{test}}$, but we do it in such a way that the imputation cannot
-	see the future.
+	we just want to use the imputation to fill in the missing entries in $X$ without relying
+	on the actual values of $\bm{y}_{\text{test}}$. Indeed, we need to impute both
+	$X_{\text{train}}$ and $X_{\text{test}}$, but we do it in such a way that the imputation
+	cannot see the future.
 	
 	This concludes our discussion for missingness, allowing us to apply our algorithms.
 	\section{R Demo}
@@ -437,7 +437,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		Also $TN+FP=N$, $FN+TP=P$, $TN+FN=PN$, $FP+TP=PP$ (easier to just see the table).
 	\end{itemize}
 	\subsection{Performance Metrics}
-	We can define several performance metrics we can define based on the quantities
+	We can define several performance metrics based on the quantities
 	in the confusion matrix. We begin with \textbf{misclassification error},
 	denoted $M_E$:
 	\begin{align*}
@@ -456,7 +456,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{align*}
 		\text{Recall} := \frac{TP}{P}
 	\end{align*}
-	There is a tradeoff between $FN$ and $FP$ when using the precision and recall
+	There is a tradeoff between $FN$ and $FP$ when using the Precision and Recall
 	metrics.
 	\begin{tcolorbox}[breakable]
 		\begin{example}
@@ -473,12 +473,12 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			\begin{align*}
 				\text{Precision} := \frac{TP}{PP} = \frac{2}{2} = 1
 			\end{align*}
-			We achieved 100\% precision, which sounds like we did a great job.
-			Meanwhile, there are $5$ humans in total, so the recall is
+			We achieved 100\% Precision, which sounds like we did a great job.
+			Meanwhile, there are $5$ bugs in total, so the Recall is
 			\begin{align*}
 				\text{Recall} := \frac{TP}{P} = \frac{2}{5} = 0.4
 			\end{align*}
-			40\% is not a good recall. Note we did not make any false positive
+			40\% is not a good Recall. Note we did not make any false positive
 			errors. However we have three false negatives, since we did not
 			circle three actual bugs. Thus implicitly we are saying that
 			the cost of false positives is higher than the cost of false negatives.
@@ -517,11 +517,11 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{align*}
 		FOR := \frac{FN}{PN}
 	\end{align*}
-	$FOR$ and $FDR$ also trade-off effectively, similar to how precision and recall
-	trade-off.	 Say we weigh $FP$ more heavily than $FN$ ($C_{FP} > C_{FN}$). In that case,
-	we are discouraged from making $FP$ predictions, so we will be less inclined
-	to predict $\hat{y}=1$, and more $\hat{y}=0$. Thus, the number of $FP$ decreases
-	and the number of $FN$ increase, meaning $FOR$ increases. If instead we
+	$FOR$ and $FDR$ also trade-off effectively, similar to how Precision and Recall
+	trade-off.	 Say we weigh $FP$ more heavily than $FN$ (that is, $C_{FP} > C_{FN}$).
+	In that case, we are discouraged from making $FP$ predictions, so we will be less inclined
+	to predict $\hat{y}=1$, and more inclined to guess $\hat{y}=0$. Thus, the number of
+	$FP$ decreases and the number of $FN$ increases, meaning $FOR$ increases. If instead we
 	decide that $C_{FN} > C_{FN}$, then we will do the opposite.
 	
 	Another performance metric $C$ is called the \textbf{total cost}:

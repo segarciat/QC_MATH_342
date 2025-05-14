@@ -104,7 +104,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	to overfit. They are called \textbf{strong learners}. For example,
 	if using trees with $N_0 = 1$, they are called \textbf{deep trees}.
 	Bootstrapping the $i=1,\ldots,M$ data sets minimizes the covariance terms
-	$\textit{Cov}[g_i, g_j]$, which is the largest component of $\text{MSE}[g_{\text{bag}}]$.
+	$\text{Cov}[g_i, g_j]$, which is the largest component of $\text{MSE}[g_{\text{bag}}]$.
 	In summary, we begin with \textit{low bias} (strong learners), and as $M$
 	increases, the variance decreases.
 	\section{Boosting}
@@ -116,7 +116,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	In bagging, the $g_m$'s are low bias and high variance; in \textit{boosting},
 	the $g_m$'s have \textit{high bias} and \textit{low variance} (less accurate,
 	less fit, more sure of our features). Thus when boosting, we say that the $g_m$'s
-	are \textbf{weak learners}, and instead we use \textit{shallow trees},
+	are \textbf{weak learners}, and instead we use \textit{shallow trees} ($N_0$ is large),
 	which are nevertheless flexible enough to make the sum complex. Moreover,
 	the covariance terms $\text{Cov}[g_i, g_j]$ are small since the $g_i$ are weak
 	in different ways, so the variance term $\text{Var}[g_{\text{boost}}]$ becomes small.
@@ -124,7 +124,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\begin{example}
 			In the Boston housing data set, one model may split only on 
 			the number of rooms, whereas another model may split only on
-			the distance to Boston city center. Thus, the variance term
+			the distance to Boston city center.
 		\end{example}
 	\end{tcolorbox}
 	Therefore, we begin with \textit{low variance} and as we increase $M$,
@@ -222,7 +222,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\vdots &= \vdots
 	\end{align*}
 	\section{Gradient Boosting}
-	The gradient boosting algorithm is based on the idea of gradient descent.
+	The \textbf{gradient boosting algorithm} is based on the idea of gradient descent.
 	The reason it took so long to arrive at this algorithm is because it
 	is more complicated. Instead of starting with a point, we start with
 	a \textit{function}; each iteration we get not a new point but a new
@@ -235,7 +235,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		that is to $-\nabla L(\bm{y}, \hat{\bm{y}})$,
 		as the response.
 	\end{enumerate}
-	After many iterations, we see the loss increases. Let's compare the
+	After many iterations, we see the loss decreases. Let's compare the
 	notations for gradient boosting and gradient descent side-by-side:
 	\begin{center}
 		\begin{tabular}{|p{0.4\linewidth}|p{0.55\linewidth}|}
@@ -276,11 +276,12 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				G_2 := \underbrace{g_0 + g_1}_{G_1} + \eta
 				\mathcal{A}(\langle X, -\nabla L(\bm{y}, \hat{\bm{y}}_1)\rangle, \mathcal{H})
 			\end{align*}\\
+			\hline
 			Compute $m$th approximation
 			\begin{align*}
 				x_m := x_{m-1} - \eta f'(x_{m-1})
 			\end{align*} &
-			Compute a second approximation
+			Compute $m$th approximation
 			\begin{align*}
 				G_m := \underbrace{g_0 + g_1 + \cdots + g_{m-1}}_{G_{m-1}} + \eta
 				\mathcal{A}(\langle X, -\nabla L(\bm{y}, \hat{\bm{y}}_{m-1})\rangle, \mathcal{H})

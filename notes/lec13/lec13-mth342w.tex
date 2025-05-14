@@ -172,9 +172,9 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\end{align*}
 	Two other useful ways to write this PMF are:
 	\begin{align*}
-		P(V=v) = p^v(1-p)^v\quad \text{ and } \quad P(V=v) = pk + (1 - p)(1-k),
+		P(V=v) = p^v(1-p)^v\quad \text{ and } \quad P(V=v) = pv + (1 - p)(1-v),
 	\end{align*}
-	where $v\in \{0, 1\}$ (the support of $V$). Then since $Y$ is Bernoulli, we have
+	where $v\in \{0, 1\}$ (the support of $V$). Then since $Y_i$ is Bernoulli, we have
 	\begin{align*}
 		P(\mathbb{D}) = \prod_{i=1}^{n}f_{pr}(\bm{x}_i)^{y_i}(1 - f_{pr}(\bm{x}_i))^{1-y_i}
 	\end{align*}
@@ -188,12 +188,12 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\mathcal{H}_{pr} = \{\, \bm{w}\cdot \bm{x} \mid \bm{w}\in\mathbb{R}^{p+1}\}
 	\end{align*}
 	Unfortunately, this does not work because the range of such functions is $\mathbb{R}$,
-	and we only want values in the open interval $(0,1)$. We would like to insist on
-	a set of candidate functions that retain the linear model $\bm{w}\cdot\bm{x}$
-	for the following reasons:
+	and we only want values in the open interval $(0,1)$ since we want probabilities.
+	Nevertheless, we would like to insist on a set of candidate functions that retain
+	the linear model $\bm{w}\cdot\bm{x}$ for the following reasons:
 	\begin{enumerate}[label=(\arabic*)]
-		\item It is easily interpretable. For example, $b$ is the change in $y$
-		if $x_1$ changes by $1$.
+		\item It is easily interpretable. For example, in $y = x_0 + bx_1$,
+		$b$ is the change in $y$ if $x_1$ changes by $1$.
 		\item Monotone in each feature, making it well-behaved.
 	\end{enumerate}
 	In order to retain the simplicity of the linear model while still mapping into $(0,1)$,
@@ -225,7 +225,10 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\end{align*}
 		On occasion we will also find it necessary to write:
 		\begin{align*}
-			1-\phi(u) = \frac{1}{1 + e^{u}}
+			1-\phi(u)
+			= \frac{1 + e^{-u}}{1 + e^{-u}} - \frac{1}{1 + e^{-u}}
+			= \frac{e^{-u}}{1 + e^{-u}}
+			=\frac{1}{1 + e^{u}}
 		\end{align*}
 		\item \textbf{Probit}: The probit link function is the CDF of the standard
 		normal random variable:
@@ -233,7 +236,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			\phi(u) &= \Phi(u) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{u}e^{-v^2/2}\ dv\\
 			1-\phi(u) &= 1-\Phi(u)=\Phi(-u)
 		\end{align*}
-		\item \textbf{Cloglog}: Standing for \textit{complementary log-log}, it corresponds to
+		\item \textbf{Cloglog}: Short for \textit{complementary $\log$-$\log$}, it corresponds to
 		the CDF of the standard Gumbel random variable:
 		\begin{align*}
 			\phi(u) = 1 - e^{-e^u}\iff 1-\phi(u) = e^{-e^u}
@@ -249,13 +252,13 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\begin{align*}
 			\phi(u) = \frac{1}{\pi} \arctan(u) + \frac{1}{2}
 		\end{align*}
-		To see that this makes sense, recall that $\lim_{x\to\pm \infty}\arctan(u) = \pm \frac{\pi}{2}$.
-		This is known as ``exotic", and is useful when the distribution of $x$'s are very
-		variable, (for example, no expectation).
+		Recall that $\lim_{x\to\pm \infty}\arctan(u) = \pm \frac{\pi}{2}$, so
+		this indeed maps into $(0, 1)$. This is known as ``exotic", and is useful when
+		the distribution of $x$'s are very variable, (for example, no expectation).
 	\end{enumerate}
 	The most common are (1) logit and (2) probit.
 	\section*{Logistic Regression}
-	Let $\phi$ be the logic link, and consider the set of candidate functions
+	Let $\phi$ be the logit link, and consider the set of candidate functions
 	\begin{align*}
 		\mathcal{H}_{pr}(\phi) = \left\{\,
 		\frac{1}{1 + e^{-\bm{w}\cdot\bm{x}}} \mid \bm{w}\in \mathbb{R}^{p+1}
@@ -272,7 +275,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\label{eqn:logistic-regression}
 	\end{align}
 	This algorithm is called \textbf{logistic regression}, and the probability
-	on $\mathbb{D}$ s given by
+	on $\mathbb{D}$ is given by
 	\begin{align*}
 		P(\mathbb{D}) 
 		&= \prod_{i=1}^{n}f_{pr}(\bm{x}_i)^{y_i}(1 - f_{pr}(\bm{x}_i))^{1-y_i}\\
@@ -286,7 +289,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	\begin{align*}
 		\frac{d}{d\bm{w}}\left(P(\mathbb{D})\right)\stackrel{\text{set}}{=}\bm{0}_{p+1}?
 	\end{align*}
-	Unfortunately, there are no closed solutions to this as in the OLS case.
+	Unfortunately, there are no closed-form solutions to this as in the OLS case.
 	To maximize the probability as specified in Equation~\ref{eqn:logistic-regression},
 	we need to use an approximation algorithm. In R, this might involve using
 	\texttt{optimx}. The algorithm will yield a feature weight vector $\bm{b}$
@@ -295,25 +298,27 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\hat{p} := g_{pr}(\bm{x}) := \phi(\bm{b}\cdot \bm{x}) = \frac{1}{1 + e^{-\bm{b}\cdot \bm{x}}}
 		\in (0,1)
 	\end{align*}
-	The vector $\bm{p}$ is distinct from $\hat{\bm{y}}$, because the latter would be
-	a prediction (such as $0$ or $1$ in this the current response space of $\mathcal{Y}=\{0,1\}$),
-	whereas $\bm{p}$ is a probability, a real number in $(0,1)$. The probability
-	is our guess of $P(Y=1\mid \bm{x})$.
+	The vector $\hat{p}$ is distinct from $\hat{y}$, because the latter would be
+	a prediction (such as $0$ or $1$ in the current response space of $\mathcal{Y}=\{0,1\}$),
+	whereas $\hat{p}$ is a probability, a real number in $(0,1)$. The probability
+	$\hat{p}$ is our approximation of $P(Y=1\mid \bm{x})$.
 	
 	Since we worked hard to retain the linearity in our model (i.e., to retain the
 	$\bm{w}\cdot \bm{x}$), let's see how we can use it. We isolate $\bm{b}\cdot\bm{x}$:
-	\begin{align}
-		\frac{1}{\hat{p}} = 1 + e^{-\bm{b}\cdot \bm{x}}&\iff \nonumber\\
-		e^{-\bm{b}\cdot \bm{x}} = \frac{1}{\hat{p}} - 1 = \frac{1-\hat{p}}{\hat{p}} &\iff \nonumber\\
-		-\bm{b}\cdot\bm{x} = \ln\left(\frac{1-\hat{p}}{\hat{p}}\right)&\iff \nonumber\\
-		\bm{b}\cdot\bm{x} = \ln\left(\frac{\hat{p}}{1-\hat{p}}\right)&
-	\end{align}
+	\begin{align*}
+		\frac{1}{1 + e^{-\bm{b}\cdot \bm{x}}}&= \hat{p}\\
+		1 + e^{-\bm{b}\cdot \bm{x}} &= \frac{1}{\hat{p}}\\
+		e^{-\bm{b}\cdot \bm{x}} &= \frac{1 - \hat{p}}{\hat{p}}\\
+		-\bm{b}\cdot\bm{x} &= \ln \left(\frac{1- \hat{p}}{\hat{p}}\right)\\
+		\bm{b}\cdot\bm{x} &= \ln\left(\frac{\hat{p}}{1 - \hat{p}}\right)
+	\end{align*}
 	The quantity $\frac{\hat{p}}{1 - \hat{p}}\in (0,\infty)$ is called the \textbf{odds of $Y=1$},
-	and $\ln\left(\frac{\hat{p}}{1 - \hat{p}}\right)\in \mathbb{R}$ is called the \textbf{log-odds
+	and $\ln\left(\frac{\hat{p}}{1 - \hat{p}}\right)\in \mathbb{R}$
+	(or equivalently $\bm{b}\cdot\bm{x}$) is called the \textbf{log-odds
 	of $Y=1$}. Both of these have a one-to-one relationship with $P(Y = 1)$.
-	We say that \textit{our model is linear in log-odds}.
+	We say that our model is \textit{linear in log-odds}.
 	
-	What is the relationship between $Y=1$ and $P(Y=1)$? If log-odds is $0$,
+	What is the relationship between log-odds and $P(Y=1)$? If log-odds is $0$,
 	then the probability is $\frac{1}{1 + e^{-0}} = \frac{1}{2}$. The following
 	table shows a worthwhile subset of values to be familiar with:
 	\begin{center}
@@ -342,7 +347,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\label{fig:log-odds-probability-plot}
 	\end{figure}
 	Note that depending on the current value of the log-odds, an increase
-	by 1 may or may not lead to a substantial increase in probability. For example:
+	by 1 in log-odds may or may not lead to a substantial increase in probability. For example:
 	\begin{itemize}
 		\item When the log-odds increases from $0$ to $1$, the probability increases
 		from $0.5$ to $0.73$.
@@ -353,11 +358,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	Previously we used $RMSE$ and $R^2$ to assess the predictions of our model.
 	For logistic regression, we consider the following \textbf{scoring rules}:
 	\begin{enumerate}[label=(\arabic*)]
-		\item \textbf{Brier Score}: Let
-		\begin{align*}
-			s_i := -(y_i - \hat{p}_i)^2
-		\end{align*}
-		Then the \textit{Brier score} is defined by:
+		\item Let $s_i := -(y_i - \hat{p}_i)^2$. Then the \textbf{Brier score} is defined by:
 		\begin{align*}
 			\bar{s} := \frac{1}{n}\sum_{i=1}^{n}s_i
 		\end{align*}
@@ -372,24 +373,18 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 			\item Yet another important case is when $\hat{p}_i = \frac{1}{2}$; the model
 			is confused and it becomes a coin toss. In this case,
 			\begin{align*}
-				\bar{s}=\sum_{i=1}^{n}\left(y_i - \frac{1}{2}\right)^2 = -\frac{1}{4}
+				\bar{s}=\sum_{i=1}^{n}-\left(y_i - \frac{1}{2}\right)^2 = -\frac{1}{4}
 			\end{align*}
 			In the homework, you will show that the null model $g_0$ beats this Brier score.
 		\end{itemize}
-		\item \textbf{Log Scoring}: This time, we define
+		\item Define the \textbf{log-scoring rule} $\bar{s}$ to be
 		\begin{align*}
-			s_i := y_i\ln(\hat{p}_i) + (1- y_i)\ln(1-\hat{p}_i)
+			s_i &:= y_i\ln(\hat{p}_i) + (1- y_i)\ln(1-\hat{p}_i)\\
+			\bar{s} &:= \frac{1}{n}\sum_{i=1}^{n}s_i
 		\end{align*}
-		which also satisfies $s_i\leq 0$, since $0<\hat{p}_i<1$ and hence
-		both logarithmic expression evaluate to negative. Note that this comes from
-		the Bernoulli distribution.
-		
-		Then the \textit{log scoring rule}
-		is given by
-		\begin{align*}
-			\bar{s} := \frac{1}{n}\sum_{i=1}^{n}s_i
-		\end{align*}
-		and again we have $\bar{s}\leq 0$. Here, $0$ is best log score value.
+		Like in Brier, $s_i\leq 0$ and hence $\bar{s}\leq 0$, since $0<\hat{p}_i<1$.
+		Note that this comes from the Bernoulli distribution.
+		Similar to Brier again, $0$ is the best score.
 		Meanwhile, if $\hat{p}_i=\frac{1}{2}$ for all $i$, we have
 		\begin{align*}
 			\bar{s} = \frac{1}{n}\sum_{i=1}^{n}\ln\left(\frac{1}{2}\right)=\ln\left(\frac{1}{2}\right)
