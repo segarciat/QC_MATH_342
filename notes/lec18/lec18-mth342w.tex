@@ -392,7 +392,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 				and $n_R$ is the number of observations in the right child.
 				We get something similar to $SSE$ by defining
 				\begin{align*}
-					G := \sum_{l=1}^{L}\hat{p}_\ell(1 - \hat{p}_\ell)
+					G := \sum_{\ell=1}^{\text{num levels}}\hat{p}_\ell(1 - \hat{p}_\ell)
 				\end{align*}
 				where $\hat{p}_\ell$ is the proportion of observations whose response
 				is category $\ell$ in a given node:

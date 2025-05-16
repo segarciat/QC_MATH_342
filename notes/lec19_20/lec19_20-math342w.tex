@@ -314,7 +314,7 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		and we choose the optimal $m_*$? This may be a good place to apply it.}
 	Consider the \textbf{model average}:
 	\begin{align*}
-		g_{avg} := \frac{\sum_{m=1}^{M}g_m}{m}
+		g_{avg} := \frac{\sum_{m=1}^{M}g_m}{M}
 	\end{align*}
 	This can be smart if all $M$ models are known to be good, since this can
 	reduce variation. On the down side, we give up interpretability (suppose,
@@ -371,12 +371,12 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 	Meanwhile, the \textbf{correlation} of random variables $X_i$ and $X_j$
 	is given by
 	\begin{align*}
-		\rho := \text{Corr}[X_i,X_j] := \frac{\text{Cov}[X_i,X_j]}{\text{SD}[X_i]\cdot \text{SD}[X_j]}
+		\rho_{ij} := \text{Corr}[X_i,X_j] := \frac{\text{Cov}[X_i,X_j]}{\text{SD}[X_i]\cdot \text{SD}[X_j]}
 	\end{align*}
 	where SD stands for standard deviation.
 	The covariance is a measure of how much $X_i$ and $X_j$ change together,
 	yielding a positive value if both tend to increase together, and negative
-	if both tend to decrease together. The correlation $\rho$ is a normalized
+	if both tend to decrease together. The correlation $\rho_{ij}$ is a normalized
 	version of covariance, with $\rho\in [-1, 1]$.
 	
 	Let $X_1,\ldots,X_n$ be random variables. Assume $\sigma_{ij}$ is the same for all
@@ -426,12 +426,12 @@ See also the \href{https://github.com/kapelner/QC_MATH_342W_Spring_2025}{course 
 		\frac{\text{Var}[G_1]\cdot (1-\rho)}{M}
 		 \right]
 		 \tag{by \ref{eqn:variance-Xbar}}\\
- 		&\to\sigma^2 + \mathbb{E}[\text{Bias}[G_1]] +
+ 		&\to\sigma^2 + \mathbb{E}[\text{Bias}[G_1(\bm{x}_*)]^2] +
  		\mathbb{E}[\rho \cdot \text{Var}[G_1]]
  		\tag{let $M\to\infty$}\\
- 		&\to\sigma^2+\rho \cdot \mathbb{E}[\cdot \text{Var}[G_1]]
- 		\tag{let $\mathcal{A}$ overfit}\\
- 		&<\sigma^2 + \mathbb{E}[\cdot \text{Var}[G_1]]
+ 		&\to\sigma^2+\rho \cdot \mathbb{E}[\text{Var}[G_1]]
+ 		\tag{let $\mathcal{A}$ overfit, bias becomes 0}\\
+ 		&<\sigma^2 + \mathbb{E}[\text{Var}[G_1]]
  		\tag{since $\rho \leq 1$, plus assume $\rho>0$}
 	\end{align*}
 	The last equation is the MSE for \textit{one} overfit model, whereas
