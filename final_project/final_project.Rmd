@@ -1,0 +1,1134 @@
+---
+title: "Final Modeling Project for MATH 342W"
+author: "Sergio E. Garcia Tapia"
+output: pdf_document
+---
+
+# Final MATH 342W Project: Predicting Apartment Prices
+
+We want to predict apartment prices in Queens, NY using the housing data
+provided.
+
+## Loading and Cleaning the Data
+
+We can begin by loading the data into a data frame and viewing a summary of its
+contents.
+
+```{r}
+# data.table provides fread(), and skimr provides skim()
+pacman::p_load(skimr, data.table)
+raw_df = fread("housing_data_2016_2017.csv")
+
+# Provide a summary of the values and columns.
+skim(raw_df)
+
+# Display a list of column names.
+colnames(raw_df)
+
+raw_df
+```
+
+In what follows, we will "clean" the data, thereby modifying the original data
+frame. In case we may need the original data, we will perform this cleanup on a
+copy:
+
+```{r}
+apt_df = copy(raw_df)
+```
+
+Since the data was collected using Amazon MTurk, the first 27 columns have
+metadata information that we can remove:
+
+```{r}
+# Remove all metadata columns.
+metadata_columns = c(1:27)
+apt_df = apt_df[, (metadata_columns) := NULL]
+rm(metadata_columns)
+
+cat("Remaining columns:\n\n")
+colnames(apt_df)
+cat("\nTotal rows:", nrow(apt_df), "\n")
+```
+
+In what follows, I will look at each column in turn, viewing some sample values,
+looking for oddities that may need to be fixed, and deciding whether the
+information is valuable enough to be kept.
+
+### `URL`
+
+```{r}
+cat("First few URLs:\n\n")
+head(apt_df$URL)
+
+cat("\nNumber of missing URLs:\n")
+sum(is.na(apt_df$URL))
+```
+
+The `URL` column lists the URL for each apartment listing. About a third of the
+rows do not have an associated `URL`. The first few entries displayed above show
+that address information about a given apartment is available in the URL.
+Incidentally, the column listing shows that there are other columns, `url` and
+`full_address_or_zip_code`, which may also contain address information.
+
+The simple approach I will take is to extract the ZIP code from each `URL` into
+a new column called `zip_code`. When we look at `full_address_or_zip_code` and
+`url` later, we can do the same for any `zip_code` values that may still not be
+present due to their absence in `URL`.
+
+```{r}
+# Obtain the str_match() function to extract ZIP code with a regular expression.
+pacman::p_load(tidyverse)
+
+# In URL, zip codes consist of 5 digits surrounded by dashes
+apt_df[, zip_code := as.factor(str_match(apt_df$URL, "-(\\d{5})-")[, 2])]
+cat("Extracted", nrow(apt_df[!is.na(zip_code)]), "zip codes out of",
+    nrow(apt_df[!is.na(URL)]), "URLs:\n")
+apt_df[, URL := NULL]
+
+table(apt_df$zip_code)
+cat("\n", length(table(apt_df$zip_code)), "different zip codes.\n")
+```
+
+### `approx_year_built`
+
+```{r}
+cat("First few approx_year_built values:\n")
+head(apt_df$approx_year_built)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$approx_year_built))
+
+cat("\nCounts for approx_year_built values:\n")
+table(apt_df$approx_year_built)
+```
+
+The `approx_year_built` column stores the approximate year in which a given
+apartment was built. I will keep this as an integer build.
+
+### `cats_allowed`
+
+```{r}
+cat("First few cats_allowed values:\n")
+head(apt_df$cats_allowed)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$cats_allowed))
+
+cat("\nCounts for cat_allowed values:")
+table(apt_df$cats_allowed)
+```
+
+The `cats_allowed` column encodes whether cats are allowed by the tenants on the
+premises. We see that there are no missing values here. However, there are
+categories for `y` and `yes`, which are probably both meant to be `yes`.
+We convert and `y` entry to `yes` and then treat the column as a categorical
+variable:
+
+```{r}
+apt_df[cats_allowed == 'y', cats_allowed := 'yes']
+apt_df[, cats_allowed := as.factor(as.numeric(cats_allowed == 'yes'))]
+table(apt_df$cats_allowed)
+```
+
+### `common_charges`
+
+```{r}
+cat("First few common_charges values:\n")
+head(apt_df$common_charges)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$common_charges))
+```
+
+The `common_charges` column lists monthly payments that tenants would need to
+make while living in the apartment. Most of the rows do not list such a value,
+which may mean that either the agent did not disclose the amount, or that there
+are no such charges, but we cannot be sure which. We can convert the non-NA
+values to integers. In anticipation of needing to do this for other columns
+with dollar values, such as `sale_price`, I'll package it as a function that can
+be reused.
+
+```{r}
+#' Strips commas, spaces, and $ symbols from the given string.
+#' @param dollar_str  A string representing an integer dollar amount.
+#' @return            A string without the symbols $, commas, or spaces.
+dollars_string_to_int = function(dollar_str) {
+  str_replace_all(dollar_str, "[$,\\s]", "")
+}
+```
+
+The function does not do the conversion to integer since it needs to done for
+the entire column anyway.
+
+```{r}
+# Remove dollar symbols, commas, and spaces.
+apt_df[!is.na(common_charges), common_charges := dollars_string_to_int(common_charges)]
+# Convert dollar string to integer.
+apt_df[, common_charges := as.numeric(common_charges)]
+```
+
+### `community_district_num`
+
+```{r}
+cat("First few community_district_num values:\n")
+head(apt_df$community_district_num)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$community_district_num))
+
+cat("\nCounts for community_district_num:\n")
+table(apt_df$community_district_num)
+```
+
+The `community_district_num` refers to the community district number of the
+neighborhood that apartment is in. Though the entries are numbers, they are
+really labels that should be treated as categorical data. Hence we factorize:
+
+```{r}
+apt_df[, community_district_num := factor(community_district_num)]
+```
+
+
+### `coop_condo`
+
+```{r}
+cat("First few coop_condo values:\n")
+head(apt_df$coop_condo)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$coop_condo))
+
+cat("\nCounts for coop_condo:\n")
+table(apt_df$coop_condo)
+```
+
+`coop_condo` classifies an apartment as a co-operative or a condominium.
+Assuming these are the only valid categories, we can create a factor variable
+from it:
+
+```{r}
+apt_df[, coop_condo := factor(coop_condo)]
+```
+
+### `data_of_sale`
+
+```{r}
+cat("First few date_of_sale values:\n")
+head(apt_df$date_of_sale)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$date_of_sale))
+```
+
+The `date_of_sale` contains the date when the apartment in the listing was sold.
+Many entries have missing values, likely because not all apartments were sold at
+the time. Whether the apartment was sold or not does not necessarily influence
+its sales price, so we can drop it:
+
+```{r}
+apt_df[, date_of_sale := NULL]
+```
+
+### `dining_room_type`
+
+```{r}
+cat("First few dining_room_type values:\n")
+head(apt_df$dining_room_type)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$dining_room_type))
+
+cat("\nCounts for dining_room_type:\n")
+table(apt_df$dining_room_type)
+```
+
+The `dining_room_type` field lists the type of dining room in the apartment.
+The values are:
+
+- `combo`: A combined dining room and living room area.
+- `formal`: A dedicated space for sit-down meals.
+- `other`: A category that does not fall in one of the former two.
+- `none`: No dining room.
+
+There is a `dining area` entry which is likely an input error corresponding to
+one of the other two, and since we don't know which, we will take the safe route
+and put it into `other`.
+
+```{r}
+apt_df[dining_room_type == 'dining area', dining_room_type := 'other']
+table(apt_df$dining_room_type)
+apt_df[, dining_room_type := factor(dining_room_type)]
+```
+
+### `dogs_allowed`
+
+```{r}
+cat("First few dogs_allowed values:\n")
+head(apt_df$dogs_allowed)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$dogs_allowed))
+
+cat("\nCounts for dogs_allowed:\n")
+table(apt_df$dogs_allowed)
+```
+
+This is similar to the `cats_allowed` field. We ought to fix the entries that
+say `yes89`, which are likely input errors, by converting them into `yes`.
+
+```{r}
+apt_df[dogs_allowed == 'yes89', dogs_allowed := 'yes']
+apt_df[, dogs_allowed := as.factor(as.numeric(dogs_allowed == 'yes'))]
+table(apt_df$dogs_allowed)
+```
+
+### `fuel_type`
+
+```{r}
+cat("First few fuel_type values:\n")
+head(apt_df$fuel_type)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$fuel_type))
+
+cat("\nCounts for fuel_type:\n")
+table(apt_df$fuel_type)
+```
+
+The `fuel_type` refers to what is used for heating, water heating, and cooking.
+In this case we see the most prevalent fuel types are `electric`, `gas`,
+and `oil`. We will need to combine combine `Other` and `other`.
+
+```{r}
+apt_df[fuel_type == 'Other', fuel_type := 'other']
+apt_df[, fuel_type := factor(fuel_type)]
+table(apt_df$fuel_type)
+```
+
+### `full_address_or_zip_code`
+
+```{r}
+cat("First few full_address_or_zip_code values:\n")
+head(apt_df$full_address_or_zip_code)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$full_address_or_zip_code))
+```
+
+The `full_address_or_zip_code` gives the location of the apartment for sale. As
+pointed out earlier, we will simply extract the ZIP code, and use it to populate
+any missing entries in the `zip_code` column we created earlier:
+
+```{r}
+apt_df[
+  is.na(zip_code),
+  zip_code := str_match(full_address_or_zip_code, "[,\\s](\\d{5})")[, 2]
+]
+nrow(apt_df[is.na(zip_code)])
+apt_df[is.na(zip_code) & !is.na(full_address_or_zip_code), .(full_address_or_zip_code)]
+apt_df[, full_address_or_zip_code := NULL]
+```
+
+Note that some ZIP codes did not match the regular expression, and we can see
+why from the data frame displayed above: they have mistakes. For example, the
+the address entry `35-25 77 St, Jackson Heights NY, 1137` is cleraly missing
+a digit at the end. I will return to this if later when extracting ZIP codes
+if there is still missingness.
+
+### `garage_exists`
+
+```{r}
+cat("First few garage_exists values:\n")
+head(apt_df$garage_exists)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$garage_exists))
+
+cat("\nCounts for garage_exists:\n")
+table(apt_df$garage_exists)
+```
+
+All of these seem to imply "yes" to the question of whether there is a garage.
+Moreover I will assume that `NA` means `"no"`.
+
+```{r}
+apt_df[!is.na(garage_exists) & garage_exists != 'yes', garage_exists := 'yes']
+apt_df[is.na(garage_exists), garage_exists := 'no']
+apt_df[, garage_exists := as.factor(as.numeric(garage_exists == 'yes'))]
+table(apt_df$garage_exists)
+```
+
+### `kitchen_type`
+
+```{r}
+cat("First few kitchen_type values:\n")
+head(apt_df$kitchen_type)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$kitchen_type))
+
+cat("\nCounts for kitchen_type:\n")
+table(apt_df$kitchen_type)
+```
+
+The `kitchen_type` field describes the type of kitchen available. It makes sense
+to use a categorical variable in this scenario. Also, there is a `1955` entry
+that my in fact have to do with the year the apartment was built:
+
+
+```{r}
+apt_df[str_detect(kitchen_type, "^[Ee]a"), kitchen_type := 'eatin']
+apt_df[str_detect(kitchen_type, "^[Ee]ff"), kitchen_type := 'efficiency']
+apt_df[str_detect(kitchen_type, "^Combo"), kitchen_type := 'combo']
+apt_df[kitchen_type == '1955']
+apt_df[kitchen_type == '1955', approx_year_built := 1955]
+apt_df[kitchen_type == '1955', kitchen_type := NA]
+apt_df[, kitchen_type := factor(kitchen_type)]
+table(apt_df$kitchen_type)
+```
+
+### `maintenance_cost`
+
+```{r}
+cat("First few maintenance_cost values:\n")
+head(apt_df$maintenance_cost)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$maintenance_cost))
+```
+
+`maintenance_cost` likely describes services such as HVAC, plumbing, painting,
+and so on. In any case, We can apply a similar transformation that we applied to
+`common_charges`:
+
+```{r}
+# Remove dollar symbols, commas, and spaces.
+apt_df[!is.na(maintenance_cost),
+       maintenance_cost := dollars_string_to_int(maintenance_cost)]
+# Convert dollar string to integer.
+apt_df[, maintenance_cost := as.numeric(maintenance_cost)]
+```
+
+### `model_type`
+
+```{r}
+cat("First few model_type values:\n")
+head(apt_df$model_type)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$model_type))
+
+#cat("\nCounts for model_type:\n")
+#table(apt_df$model_type)
+```
+
+It's unclear what `model_type` is supposed to represent, since the values do
+not have uniformity. Bluntly, the data is garbage, so it makes sense to drop it:
+
+```{r}
+apt_df[, model_type := NULL]
+```
+
+### `num_bedrooms`
+
+```{r}
+cat("First few num_bedrooms values:\n")
+head(apt_df$num_bedrooms)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$num_bedrooms))
+
+cat("\nCounts for num_bedrooms:\n")
+table(apt_df$num_bedrooms)
+```
+
+`number_of_bedrooms` can be kept as an integer field in case a new apartment
+becomes available with more than 6 bedrooms (as opposed to using a factor that
+would not allow for this).
+
+### `num_floors_in_build`
+
+```{r}
+cat("First few num_floors_in_build values:\n")
+head(apt_df$num_floors_in_build)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$num_floors_in_build))
+
+cat("\nCounts for num_floors_in_build:\n")
+table(apt_df$num_floors_in_build)
+```
+
+We leave this as an integer (and not a factor) for a similar reason as in
+`num_bedrooms`.
+
+### `num_full_bathrooms`
+
+```{r}
+cat("First few num_full_bathrooms values:\n")
+head(apt_df$num_full_bathrooms)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$num_full_bathrooms))
+
+cat("\nCounts for num_full_bathrooms:\n")
+table(apt_df$num_full_bathrooms)
+```
+
+We leave this as an integer (and not a factor) for a similar reason
+as in `num_bedrooms`.
+
+### `num_half_bathrooms`
+
+```{r}
+cat("First few num_half_bathrooms values:\n")
+head(apt_df$num_half_bathrooms)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$num_half_bathrooms))
+
+cat("\nCounts for num_half_bathrooms:\n")
+table(apt_df$num_half_bathrooms)
+```
+
+We leave this as an integer (and not a factor) for a similar reason
+as in `num_bedrooms`.
+
+### `num_total_rooms`
+
+```{r}
+cat("First few num_total_rooms values:\n")
+head(apt_df$num_total_rooms)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$num_total_rooms))
+
+cat("\nCounts for num_total_rooms:\n")
+table(apt_df$num_total_rooms)
+```
+
+We leave this as an integer (and not a factor) for a similar reason
+as in `num_bedrooms`.
+
+### `parking_charges`
+
+```{r}
+cat("First few parking_charges values:\n")
+head(apt_df$parking_charges)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$parking_charges))
+
+cat("\nCounts for parking_charges:\n")
+table(apt_df$parking_charges)
+```
+
+We apply the same transformation as in `common_charges` to convert dollar
+strings to integers:
+
+```{r}
+# Remove dollar symbols, commas, and spaces.
+apt_df[!is.na(parking_charges),
+       parking_charges := dollars_string_to_int(parking_charges)]
+# Convert dollar string to integer.
+apt_df[, parking_charges := as.numeric(parking_charges)]
+apt_df[!is.na(parking_charges)]$parking_charges
+```
+
+### `pct_tax_deductibl`
+
+```{r}
+cat("First few pct_tax_deductibl values:\n")
+head(apt_df$pct_tax_deductibl)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$pct_tax_deductibl))
+
+cat("\nCounts for pct_tax_deductibl:\n")
+table(apt_df$pct_tax_deductibl)
+```
+
+This percentage values can be kept as an integer.
+
+### `sale_price`
+
+```{r}
+cat("First few sale_price values:\n")
+head(apt_df$sale_price)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$sale_price))
+```
+
+`sale_price` is the sale price of an apartment, and it is the response column
+that we are interested in predicting. Many rows have missing values, which
+means we will not be able to use all rows of the data set as training data.
+However, rather than dropping units with missingness in this column, we can
+use those units to help impute missing values for other entries in the data.
+Beforehand, we will convert the dollar strings to integers again:
+
+```{r}
+# Remove dollar symbols, commas, and spaces.
+apt_df[!is.na(sale_price), sale_price := dollars_string_to_int(sale_price)]
+# Convert dollar string to integer.
+apt_df[, sale_price := as.numeric(sale_price)]
+```
+
+### `sq_footage`
+
+```{r}
+cat("First few sq_footage values:\n")
+head(apt_df$sq_footage)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$sq_footage))
+```
+
+`sq_footage` describes the amount of space available in the apartment. We can
+leave this field as an integer.
+
+### `total_taxes`
+
+```{r}
+cat("First few total_taxes values:\n")
+head(apt_df$total_taxes)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$total_taxes))
+```
+
+We can apply the dollar string to integer conversion from earlier again:
+
+```{r}
+# Remove dollar symbols, commas, and spaces.
+apt_df[!is.na(total_taxes), total_taxes := dollars_string_to_int(total_taxes)]
+# Convert dollar string to integer.
+apt_df[, total_taxes := as.numeric(total_taxes)]
+```
+
+### `walk_score`
+
+```{r}
+cat("First few walk_score values:\n")
+head(apt_df$walk_score)
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$walk_score))
+
+cat("\nCounts for walk_score:\n")
+table(apt_df$walk_score)
+```
+
+We can keep the `walk_score` as an integer.
+
+### `listing_price_to_nearest_1000`
+
+```{r}
+cat("A few listing_price_to_nearest_1000 values:\n")
+head(apt_df[!is.na(listing_price_to_nearest_1000), listing_price_to_nearest_1000])
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$listing_price_to_nearest_1000))
+```
+
+This quantity is the amount the seller is an initial asking price when the
+seller placed the apartment for sale. This quantity is like a prediction itself,
+which may skew our predictions. Put another way, not all apartments for which
+we will be predicting prices will list such a quantity because they were not
+all necessary for sale. In fact let's inspect the `sale_price` and the
+`listing_price_to_nearest_1000` columns side by side:
+
+```{r}
+apt_df[, .(sale_price, listing_price_to_nearest_1000)]
+```
+
+The listing prices are missing observations where the `sale_price` is present.
+Therefore if we kept `listing_price_to_nearest_1000`, all entries would be
+missing for that column in the training set. I believe it's best to drop this
+column altogether, but we will do that after imputing. Before that, though,
+we need to change the values to be numeric:
+
+```{r}
+# Remove dollar symbols, commas, and spaces.
+apt_df[!is.na(listing_price_to_nearest_1000),
+       listing_price_to_nearest_1000 :=
+         dollars_string_to_int(listing_price_to_nearest_1000)]
+# Convert dollar string to integer.
+apt_df[, listing_price_to_nearest_1000 := as.numeric(listing_price_to_nearest_1000)]
+```
+
+### `url`
+
+```{r}
+cat("First few non-missing values:\n")
+head(apt_df[!is.na(url), url])
+
+cat("\nNumber of missing values:\n")
+sum(is.na(apt_df$url))
+```
+
+As mentioned earlier, we can simply extract the ZIP code and populate any missing
+`zip_code` entries:
+
+```{r}
+apt_df[
+  is.na(zip_code),
+  zip_code := str_match(url, "-(\\d{5})-")[, 2]
+]
+apt_df[, url := NULL]
+sum(is.na(apt_df$zip_code))
+table(apt_df$zip_code)
+```
+
+### `zip_code`
+
+Below, I ensure that whatever ZIP codes I matched do indeed fall in the regions
+of Queens that are predicting for:
+
+```{r}
+extracted_zips = as.numeric(names(unlist(table(apt_df$zip_code))))
+
+northeast_queens = c(11361, 11362, 11363, 11364)
+north_queens = c(11354, 11355, 11356, 11357, 11358, 11359, 11360)
+central_queens = c(11365, 11366, 11367)
+jamaica = c(11412, 11423, 11432, 11433, 11434, 11435, 11436)
+northwest_queens = c(11101, 11102, 11103, 11104, 11105, 11106)
+west_central_queens = c(11374, 11375, 11379, 11385)
+southeast_queens = c(11004, 11005, 11411, 11413, 11422, 11426, 11427, 11428, 11429)
+southwest_queens = c(11414, 11415, 11416, 11417, 11418, 11419, 11420, 11421)
+west_queens = c(11368, 11369, 11370, 11372, 11373, 11377, 11378)
+
+queen_zips = c(northeast_queens, north_queens, central_queens, jamaica,
+                   northwest_queens, west_central_queens, southeast_queens,
+                   southwest_queens, west_queens)
+zips_outside_domain_of_interest = setdiff(extracted_zips, queen_zips)
+if (length(zips_outside_domain_of_interest) > 0) {
+  cat("Warning: ZIP codes not in the areas in Queens of interest:\n")
+  cat(zips_outside_domain_of_interest, "\n")
+} else {
+  cat("All ZIP codes fall within the regions of interest.")
+}
+```
+
+In an attempt to make the upcoming models easier to interpret while risking a
+loss of predictive power, I will group the zip codes into the regions implied
+earlier, and then drop the `zip_code` column.
+
+
+```{r}
+apt_df[zip_code %in% northeast_queens, region := "northeast_queens"]
+apt_df[zip_code %in% north_queens, region := "north_queens"]
+apt_df[zip_code %in% central_queens, region := "central_queens"]
+apt_df[zip_code %in% jamaica, region := "jamaica"]
+apt_df[zip_code %in% northwest_queens, region := "northwest_queens"]
+apt_df[zip_code %in% west_central_queens, region := "west_central_queens"]
+apt_df[zip_code %in% southeast_queens, region := "southeast_queens"]
+apt_df[zip_code %in% southwest_queens, region := "southwest_queens"]
+apt_df[zip_code %in% west_queens, region := "west_queens"]
+apt_df[, zip_code := NULL]
+apt_df[, region := as.factor(region)]
+apt_df
+```
+
+### Remaining Feature Set
+
+During the clean-up, we created a `zip_code` column and eliminated `URL`,
+`full_address_or_zip_code`, and `url`. We also eliminated `model_type` because
+it seemed most of its data lacked uniformity. We further dropped the
+`listing_price_to_nearest_1000` column.
+
+A further change we can make is to combine the information in the columns named
+`common_charges` and `maintenance_cost` into a single column. This is because
+`common_charges` typically correspond to condos, and `maintenance_cost`
+typically corresponds to co-ops (thanks to Allen for pointing this out).
+We will create a new column named `monthly_charges` and drop the previous ones:
+
+```{r}
+apt_df[coop_condo == 'condo', monthly_charges := common_charges]
+apt_df[coop_condo == 'co-op', monthly_charges := maintenance_cost]
+apt_df[, common_charges := NULL]
+apt_df[, maintenance_cost := NULL]
+```
+
+After all of these changes, the following columns remain as our feature set:
+
+```{r}
+colnames(apt_df)
+ncol(apt_df)
+```
+
+The following summarizes the missingness and statistics across the remaining
+feature set:
+
+```{r}
+skim(apt_df)
+proportions(table(apt_df$cats_allowed))
+proportions(table(apt_df$community_district_num))
+proportions(table(apt_df$coop_condo))
+proportions(table(apt_df$dining_room_type))
+proportions(table(apt_df$dogs_allowed))
+proportions(table(apt_df$fuel_type))
+proportions(table(apt_df$garage_exists))
+proportions(table(apt_df$kitchen_type))
+proportions(table(apt_df$region))
+```
+
+## Missingness and Imputation
+
+Having cleaned up the data, we can use an imputation library to fill missing
+values. We ought to be careful, though, since there are rows that do not contain
+a `sale_price`. Let's re-arrange our data frame so that all present values
+appear first:
+
+```{r}
+# Move sale_price to last column
+setcolorder(apt_df, c("sale_price"), after = ncol(apt_df))
+apt_df_with_responses = apt_df[!is.na(sale_price)]
+apt_df_without_responses = apt_df[is.na(sale_price)]
+```
+
+We cannot use the rows that have a missing response for building our data set,
+but we can use them for imputation. Before imputing, we will create a
+train-select-test split from the rows with present responses:
+
+```{r}
+set.seed(16)
+K = 5
+n = nrow(apt_df_with_responses)
+
+n_select = ceiling(n / K)
+n_test = n_select
+n_train = n - n_select - n_test
+
+test_idx = sample(1 : n, n_test, replace = FALSE)
+select_idx = sample(setdiff(1 : n, test_idx), n_select, replace = FALSE)
+train_idx = setdiff(1 : n, c(test_idx, select_idx))
+```
+
+To be careful about the test set influencing the imputation, we will set aside
+the responses from the test set and `NA` them for the purpose of imputation:
+
+```{r}
+y_test = apt_df_with_responses$sale_price[test_idx]
+y_select = apt_df_with_responses$sale_price[select_idx]
+apt_df_with_responses[test_idx, sale_price := NA]
+apt_df_with_responses[select_idx, sale_price := NA]
+```
+
+Now we can impute:
+
+```{r}
+apt_df_responses_at_start = rbind(apt_df_with_responses, apt_df_without_responses)
+pacman::p_load(missForest)
+apt_df_imp = missForest(apt_df_responses_at_start)$ximp
+```
+
+As mentioned earlier, we will just drop the listing price now, which we only
+kept for the purpose of imputing:
+
+```{r}
+# Remove dollar symbols, commas, and spaces.
+apt_df_imp[, listing_price_to_nearest_1000 := NULL]
+skim(apt_df_imp)
+```
+
+The imputation may have produced continuous values for integer data, such as
+`num_bedrooms`, so let's fix values first by rounding up:
+
+```{r}
+apt_df_imp[, num_bedrooms := ceiling(num_bedrooms)]
+apt_df_imp[, num_floors_in_building := ceiling(num_floors_in_building)]
+apt_df_imp[, num_full_bathrooms := ceiling(num_full_bathrooms)]
+apt_df_imp[, num_half_bathrooms := ceiling(num_half_bathrooms)]
+apt_df_imp[, num_total_rooms := ceiling(num_total_rooms)]
+apt_df_imp[, approx_year_built := ceiling(approx_year_built)]
+apt_df_imp[, walk_score := ceiling(walk_score)]
+```
+
+Having populated missing values, we can extract our data set, and reintroduce
+the test responses that we set aside earlier:
+
+```{r}
+X = apt_df_imp[1 : n, !c("sale_price")]
+y = apt_df_imp[1 : n]$sale_price
+y[test_idx] = y_test
+y[select_idx] = y_select
+```
+
+Finally, we separate our train and test data (note the response for the test set
+was already set aside earlier):
+
+```{r}
+X_test = X[test_idx]
+X_select = X[select_idx]
+
+X_train = X[train_idx]
+y_train = y[train_idx]
+```
+
+Let's take a quick look at the sale prices graphically:
+
+```{r}
+pacman::p_load(ggplot2)
+ggplot(data.frame(y = y)) +
+  aes(y) +
+  geom_histogram() +
+  ggtitle("Sale price of apartments in Queens",
+          subtitle = "From housing_data_2016_2017.csv") +
+  xlab("Price (in dollars)") +
+  ylab("Frequency")
+ggsave('./report/images/apartment_sale_price_histogram.png')
+```
+
+We can supplement this graphic with a 5-number summary of the sale prices:
+
+```{r}
+summary(y)
+```
+
+We see a right-skewed distribution with a potential outlier priced at 999,999
+dollars.
+
+```{r}
+skim(apt_df_imp)
+```
+
+## Regression Tree Modeling
+
+For our first approach, we will fit a single regression tree. We will use the
+`YARF` package:
+
+```{r}
+if (!pacman::p_isinstalled(YARF)){
+  pacman::p_install_gh("kapelner/YARF/YARFJARs", ref = "dev")
+  pacman::p_install_gh("kapelner/YARF/YARF", ref = "dev", force = TRUE)
+}
+options(java.parameters = "-Xmx4000m")
+pacman::p_load(YARF)
+```
+
+Fitting a single tree model is easy, but we ought to find the right
+hyperparameter `N_0` for the tree size:
+
+```{r}
+# Find optimal node size
+nodesizes = seq(from = 1, to = 75)
+oos_error_by_nodesize = array(data = NA, dim = length(nodesizes))
+for (m in 1 : length(nodesizes)) {
+  tree_mod = YARFCART(X_train, y_train, nodesize = nodesizes[m],
+                      calculate_oob_error = FALSE, verbose = FALSE)
+  y_hat_select = predict(tree_mod, X_select)
+  oos_error_by_nodesize[m] = sqrt(mean((y_select - y_hat_select)^2))
+}
+
+# Visualize OOS error by node size
+ggplot(data.frame(nodesize = nodesizes, oos_error = oos_error_by_nodesize)) +
+  aes(x = nodesize, y = oos_error) +
+  geom_point()
+
+optimal_nodesize = nodesizes[which.min(oos_error_by_nodesize)]
+cat("Optimal node size:", optimal_nodesize)
+```
+
+We can now build a tree model using this node size:
+
+```{r}
+tree_mod = YARFCART(
+  rbind(X_train, X_select),
+  c(y_train, y_select),
+  nodesize = optimal_nodesize,
+  calculate_oob_error = FALSE,
+  verbose = FALSE
+)
+```
+
+To get a sense of performance, we can compute the in-sample $R^2$ and $RMSE$
+metrics:
+
+```{r}
+y_hat_train_select = predict(tree_mod, rbind(X_train, X_select))
+
+SST_train_select = sum((c(y_train, y_select) - mean(c(y_train, y_select)))^2)
+inSSE_tree_mod = sum((c(y_train, y_select) - y_hat_train_select) ^2)
+
+inRMSE_tree_mod = sqrt(inSSE_tree_mod / ((n_train + n_select) - 1))
+inRsq_tree_mod = 1 - inSSE_tree_mod / SST_train_select
+
+cat("The in-sample RMSE metric for the tree model is:", inRMSE_tree_mod, "\n")
+cat("The in-sample R^2 metric for the tree model is:", inRsq_tree_mod, "\n")
+```
+
+To get a sense of performance, we can compute the oos $R^2$ and $RMSE$ metrics:
+
+```{r}
+y_hat_test = predict(tree_mod, X_test)
+
+SST = sum((y_test - mean(y_test))^2)
+SSE_tree_mod = sum((y_test - y_hat_test) ^2)
+
+RMSE_tree_mod = sqrt(SSE_tree_mod / (n_test - 1))
+Rsq_tree_mod = 1 - SSE_tree_mod / SST
+
+cat("The RMSE metric for the tree model is:", RMSE_tree_mod, "\n")
+cat("The R^2 metric for the tree model is:", Rsq_tree_mod, "\n")
+```
+
+The $R^2$ metric is not bad; it's positive and moderately close to 1. We could
+compute the metrics for the null model to get a sense for how good well the
+tree model did. The $R^2$ metric of the null model is 0 by definition, so
+comparing against its $R^2$ metric is not useful. But we can consider the RMSE:
+
+```{r}
+RMSE_0 = sqrt(SST / (n_test - 1))
+cat("The RMSE metric for the null model is:", RMSE_0, "\n")
+cat("Proportional change in RMSE compared to null model: ",
+    (RMSE_tree_mod - RMSE_0) / RMSE_0, "\n")
+```
+
+It seems that there is about a 43% reduction in the RMSE from using our tree
+model in comparison to the null model
+Next, let's illustrate the first few layers to get a sense for what the most
+important features might be:
+
+```{r}
+?illustrate_trees
+illustrate_trees(tree_mod, max_depth = 5, font_size = 8, open_file = TRUE,
+                 title = "tree_mod_report", file_format = "png")
+illustrate_trees(tree_mod, max_depth = 6, font_size = 8, open_file = TRUE,
+                 title = "tree_mod_top_10", file_format = "png")
+```
+
+At the top we have `approx_year_built` as the most important feature. Other
+important features are `sq_footage`, `parking_charges`, and `monthly_charges`.
+
+```{r}
+get_tree_num_nodes_leaves_max_depths(tree_mod)
+```
+
+## Linear Modeling
+
+Next we try a linear model.
+
+```{r}
+X_train_and_select = rbind(X_train, X_select)
+y_train_and_select = c(y_train, y_select)
+Xy_train_and_select = cbind(X_train_and_select, y_train_and_select)
+
+linear_mod = lm(y_train_and_select ~ ., Xy_train_and_select)
+data.frame(linear_mod$coefficients)
+```
+
+First we see how OLS does in-sample:
+
+```{r}
+cat("The in-sample RMSE metric for the linear model is:",
+    summary(linear_mod)$sigma, "\n")
+cat("The in-sample R^2 metric for the linear model is:",
+    summary(linear_mod)$r.sq, "\n")
+```
+
+Let's also see how it does out-of-sample:
+
+```{r}
+y_hat_test = predict(linear_mod, X_test)
+
+SSE_linear_mod = sum((y_test - y_hat_test) ^2)
+
+RMSE_linear_mod = sqrt(SSE_linear_mod / (n_test - 1))
+Rsq_linear_mod = 1 - SSE_linear_mod / SST
+
+cat("The RMSE metric for the linear model is:", RMSE_linear_mod, "\n")
+cat("The R^2 metric for the linear model is:", Rsq_linear_mod, "\n")
+```
+
+## Random Forest Modeling
+
+I will perform model selection with a grid of triplets to find the best triplet
+of the hyperparameter $N_0$ (threshold number of nodes), number of trees, and
+$m_{try}$ (size of feature subsets).
+
+```{r}
+# Create grid of triplets for hyperparameters to test for
+mtry_values = c(1, seq(from = 1, to = ncol(X), by = 2))
+numtree_values = c(1, seq(from = 10, to = 60, by = 10))
+nodesize_values = c(1, seq(from = 2, to = 30, by = 2))
+
+optimal_mtry = 1
+optimal_numtree = 1
+optimal_nodesize = 1
+optimal_oos_RMSE = Inf
+
+total_iterations =
+  length(mtry_values) *
+  length(numtree_values) * 
+  length(nodesize_values)
+
+current_iteration = 1
+
+# Find the optimal hyperparameter triplet
+for (i in 1 : length(mtry_values)) {
+  for (j in 1 : length(numtree_values)) {
+    for (k in 1 : length(nodesize_values)) {
+      cat("Iteration", current_iteration, "of", total_iterations, "\n")
+      current_iteration = current_iteration + 1
+      
+      rf_mod = YARF(X_train, y_train,
+                    mtry = mtry_values[i],
+                    num_trees = numtree_values[j],
+                    nodesize = nodesize_values[k],
+                    calculate_oob_error = FALSE, verbose = FALSE)
+      
+      y_hat_select = predict(rf_mod, X_select)
+      current_oos = sqrt(mean((y_select - y_hat_select)^2))
+      
+      if (current_oos < optimal_oos_RMSE) {
+        optimal_oos_RMSE = current_oos
+        optimal_mtry = mtry_values[i]
+        optimal_numtree = numtree_values[j]
+        optimal_nodesize = nodesize_values[k]
+      }
+    }
+  }
+}
+
+cat("Optimal oos_RMSE", optimal_oos_RMSE, "\n")
+cat("Optimal mtry:", optimal_mtry, "\n")
+cat("Optimal node size:", optimal_nodesize, "\n")
+cat("Optimal number of trees:", optimal_numtree, "\n")
+```
+
+Using these "optimal" values, we can build a random forest model:
+
+```{r}
+rf_mod = YARF(rbind(X_train, X_select), c(y_train, y_select),
+                    mtry = optimal_mtry,
+                    num_trees = optimal_numtree,
+                    nodesize = optimal_nodesize,
+                    calculate_oob_error = FALSE, verbose = FALSE, seed = 42)
+```
+
+```{r}
+y_hat_train_select = predict(rf_mod, rbind(X_train, X_select))
+inSSE_rf_mod = sum((c(y_train, y_select) - y_hat_train_select) ^2)
+SST_train_select = sum((c(y_train, y_select) - mean(c(y_train, y_select)))^2)
+
+inRMSE_rf_mod = sqrt(inSSE_rf_mod / ((n_train + n_select) - 1))
+inRsq_rf_mod = 1 - inSSE_rf_mod / SST_train_select
+
+cat("The in-sample RMSE metric for the random forest model is:", inRMSE_rf_mod, "\n")
+cat("The in-sample R^2 metric for the random forest model is:", inRsq_rf_mod, "\n")
+```
+
+Finally, we compute the associated out-of-sample metrics metrics:
+
+```{r}
+y_hat_test = predict(rf_mod, X_test)
+
+SSE_rf_mod = sum((y_test - y_hat_test) ^2)
+
+RMSE_rf_mod = sqrt(SSE_rf_mod / (n_test - 1))
+Rsq_rf_mod = 1 - SSE_rf_mod / SST
+
+cat("The RMSE metric for the random forest model is:", RMSE_rf_mod, "\n")
+cat("The R^2 metric for the random forest model is:", Rsq_rf_mod, "\n")
+```
